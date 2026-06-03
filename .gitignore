@@ -1,0 +1,32 @@
+# Maven build
+target/
+*.class
+*.jar
+*.war
+
+# Local H2 database
+*.mv.db
+*.lock.db
+*.trace.db
+
+# Logs
+*.log
+logs/
+spring.log
+spring-err.log
+
+# Secrets / env
+application-prod.properties
+.env
+
+# Reports
+metrics-reports/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
