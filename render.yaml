@@ -1,28 +1,36 @@
+databases:
+  - name: gorila-db
+    databaseName: gorila_motos
+    user: gorila_user
+    plan: free
+    region: virginia
+
 services:
   - type: web
-    name: gorila-motos-api
-    runtime: java
+    name: backend-gorila_motos
+    runtime: docker
     plan: free
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java -Dserver.port=$PORT -jar target/GMotors-0.0.1-SNAPSHOT.jar
-    healthCheckPath: /actuator/health
+    region: virginia
+    branch: main
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: DB_DRIVER
-        value: org.postgresql.Driver
-      - key: DB_DIALECT
-        value: org.hibernate.dialect.PostgreSQLDialect
-      - key: DB_DDL
-        value: update
       - key: DB_URL
-        sync: false
+        fromDatabase:
+          name: gorila-db
+          property: connectionString
       - key: DB_PASSWORD
-        sync: false
+        fromDatabase:
+          name: gorila-db
+          property: password
+      - key: DB_USER
+        fromDatabase:
+          name: gorila-db
+          property: user
       - key: ALLOWED_ORIGINS
         value: https://gorila-motos.vercel.app
       - key: SUPABASE_URL
-        sync: false
+        value: https://rsztjwgbgljjkrnrpbxi.supabase.co
       - key: SUPABASE_ANON_KEY
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
