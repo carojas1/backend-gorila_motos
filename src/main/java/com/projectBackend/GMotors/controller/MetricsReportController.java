@@ -2,6 +2,7 @@ package com.projectBackend.GMotors.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -24,20 +25,20 @@ public class MetricsReportController {
     private final DailyReportScheduler scheduler;
     private final MetricsCollectorService collectorService;
     private final ReportExporterService exporterService;
-    private final GitLabReportService gitLabReportService;
-    
+
+    /* GitLab es opcional — si GITLAB_ENABLED=false el bean no existe */
+    @Autowired(required = false)
+    private GitLabReportService gitLabReportService;
+
     @Value("${metrics.reports.timezone:America/Guayaquil}")
     private String timezone;
 
-    // Constructor
     public MetricsReportController(DailyReportScheduler scheduler,
                                    MetricsCollectorService collectorService,
-                                   ReportExporterService exporterService,
-                                   GitLabReportService gitLabReportService) {
+                                   ReportExporterService exporterService) {
         this.scheduler = scheduler;
         this.collectorService = collectorService;
         this.exporterService = exporterService;
-        this.gitLabReportService = gitLabReportService;
     }
 
     /**
