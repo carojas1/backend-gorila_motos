@@ -6,10 +6,16 @@ import com.projectBackend.GMotors.dto.RegistroListadoDTO;
 import com.projectBackend.GMotors.dto.DetalleFacturaDTO;
 import com.projectBackend.GMotors.dto.DetalleFacturaCreateDTO;
 import com.projectBackend.GMotors.model.Registro;
+import com.projectBackend.GMotors.model.Usuario;
+import com.projectBackend.GMotors.model.Moto;
+import com.projectBackend.GMotors.model.Tipo;
 import com.projectBackend.GMotors.repository.RegistroRepository;
+import com.projectBackend.GMotors.repository.UsuarioRepository;
+import com.projectBackend.GMotors.repository.MotoRepository;
 import com.projectBackend.GMotors.model.Factura;
 import com.projectBackend.GMotors.service.RegistroService;
 import com.projectBackend.GMotors.service.FacturaService;
+import com.projectBackend.GMotors.service.ResendEmailService;
 import com.projectBackend.GMotors.config.FlaskOcrClient;
 
 import java.util.List;
@@ -33,7 +39,16 @@ public class RegistroController {
 
 	@Autowired
 	private FacturaService facturaService;
-	
+
+	@Autowired
+	private ResendEmailService emailService;
+
+	@Autowired
+	private UsuarioRepository usuarioRepository;
+
+	@Autowired
+	private MotoRepository motoRepository;
+
 	@Autowired
 	private RegistroRepository registroRepository;
 	
@@ -124,6 +139,30 @@ public class RegistroController {
 
 		try {
 			Registro registroActualizado = registroService.actualizarEstado(id, estado, observaciones);
+
+			// ── Email automático cuando se factura (estado = 4) ──────────────────
+			if (estado != null && estado == 4) {
+				try {
+					Registro reg = registroRepository.findById(id).orElse(null);
+					if (reg != null && reg.getCliente() != null && reg.getCliente().getCorreo() != null) {
+						Usuario cliente = reg.getCliente();
+						Moto    moto    = reg.getMoto();
+						double  costo   = reg.getFactura() != null ? reg.getFactura().getCostoTotal() : 0.0;
+						String  tipo    = reg.getTipo() != null ? reg.getTipo().getNombre() : "Servicio de mantenimiento";
+						String  fecha   = reg.getFecha() != null ? reg.getFecha().toString() : "—";
+						String  placa   = moto != null ? moto.getPlaca() : "—";
+
+						emailService.enviarFactura(
+							cliente.getCorreo(),
+							cliente.getNombreCompleto(),
+							placa, tipo, costo, fecha, id
+						);
+					}
+				} catch (Exception emailEx) {
+					System.err.println("[EMAIL] Error enviando factura: " + emailEx.getMessage());
+					// No bloqueamos la respuesta si el email falla
+				}
+			}
 
 			return ResponseEntity.ok(Map.of("mensaje", "Estado actualizado exitosamente", "idRegistro",
 					registroActualizado.getIdRegistro(), "nuevoEstado", registroActualizado.getEstado()));
