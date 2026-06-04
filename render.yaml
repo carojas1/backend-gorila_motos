@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: gorila-motos-api
+    runtime: java
+    plan: free
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -Dserver.port=$PORT -jar target/GMotors-0.0.1-SNAPSHOT.jar
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: DB_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
+      - key: DB_DDL
+        value: update
+      - key: DB_URL
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://gorila-motos.vercel.app
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: JWT_EXPIRATION_MINUTES
+        value: "120"
+      - key: GITLAB_ENABLED
+        value: "false"
