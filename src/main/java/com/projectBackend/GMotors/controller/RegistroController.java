@@ -1,22 +1,18 @@
 package com.projectBackend.GMotors.controller;
 
 import com.projectBackend.GMotors.dto.RegistroCreateDTO;
-import com.projectBackend.GMotors.dto.RegistroDetalleDTO;
 import com.projectBackend.GMotors.dto.RegistroListadoDTO;
 import com.projectBackend.GMotors.dto.DetalleFacturaDTO;
 import com.projectBackend.GMotors.dto.DetalleFacturaCreateDTO;
 import com.projectBackend.GMotors.model.Registro;
 import com.projectBackend.GMotors.model.Usuario;
-import com.projectBackend.GMotors.model.Moto;
-import com.projectBackend.GMotors.model.Tipo;
 import com.projectBackend.GMotors.repository.RegistroRepository;
-import com.projectBackend.GMotors.repository.UsuarioRepository;
-import com.projectBackend.GMotors.repository.MotoRepository;
 import com.projectBackend.GMotors.model.Factura;
 import com.projectBackend.GMotors.service.RegistroService;
 import com.projectBackend.GMotors.service.FacturaService;
 import com.projectBackend.GMotors.service.ResendEmailService;
 import com.projectBackend.GMotors.config.FlaskOcrClient;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -42,12 +38,6 @@ public class RegistroController {
 
 	@Autowired
 	private ResendEmailService emailService;
-
-	@Autowired
-	private UsuarioRepository usuarioRepository;
-
-	@Autowired
-	private MotoRepository motoRepository;
 
 	@Autowired
 	private RegistroRepository registroRepository;
@@ -132,6 +122,7 @@ public class RegistroController {
 	/**
 	 * Actualizar solo el estado de un registro — acepta JSON body: { "estado": 2, "observaciones": "..." }
 	 */
+	@Transactional
 	@PatchMapping("/{id}/estado")
 	public ResponseEntity<?> actualizarEstado(@PathVariable Long id, @RequestBody Map<String, Object> body) {
 		Integer estado = body.containsKey("estado") ? ((Number) body.get("estado")).intValue() : null;
@@ -146,15 +137,15 @@ public class RegistroController {
 					Registro reg = registroRepository.findById(id).orElse(null);
 					if (reg != null && reg.getCliente() != null && reg.getCliente().getCorreo() != null) {
 						Usuario cliente = reg.getCliente();
-						Moto    moto    = reg.getMoto();
-						double  costo   = reg.getFactura() != null ? reg.getFactura().getCostoTotal() : 0.0;
+						double  costo   = reg.getFactura() != null && reg.getFactura().getCostoTotal() != null
+						                  ? reg.getFactura().getCostoTotal().doubleValue() : 0.0;
 						String  tipo    = reg.getTipo() != null ? reg.getTipo().getNombre() : "Servicio de mantenimiento";
 						String  fecha   = reg.getFecha() != null ? reg.getFecha().toString() : "—";
-						String  placa   = moto != null ? moto.getPlaca() : "—";
+						String  placa   = reg.getMoto() != null ? reg.getMoto().getPlaca() : "—";
 
 						emailService.enviarFactura(
 							cliente.getCorreo(),
-							cliente.getNombreCompleto(),
+							cliente.getNombre_completo(),
 							placa, tipo, costo, fecha, id
 						);
 					}
