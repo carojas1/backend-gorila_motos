@@ -5,7 +5,7 @@ import com.projectBackend.GMotors.repository.UsuarioRolRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
@@ -97,17 +97,17 @@ public class RoleValidationService {
      * Obtiene la fecha_creacion más antigua de los roles del usuario
      * Usado para preservar antigüedad en cambios de categoría
      */
-    public LocalDateTime obtenerFechaIngresoSistema(Long usuarioId) {
+    public LocalDate obtenerFechaIngresoSistema(Long usuarioId) {
         List<UsuarioRol> roles = usuarioRolRepository.findByIdUsuario(usuarioId);
-        
+
         if (roles.isEmpty()) {
-            return LocalDateTime.now();
+            return LocalDate.now();
         }
-        
+
         return roles.stream()
             .map(UsuarioRol::getFechaCreacion)
-            .min(LocalDateTime::compareTo)
-            .orElse(LocalDateTime.now());
+            .min(Comparator.naturalOrder())
+            .orElse(LocalDate.now());
     }
     
     // ═══════════════════════════════════════════════════════

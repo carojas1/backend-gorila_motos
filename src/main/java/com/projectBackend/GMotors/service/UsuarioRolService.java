@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,14 +57,14 @@ public class UsuarioRolService {
 
 			// Si existe pero está inactivo, reactivar
 			relacion.setEstado(1);
-			relacion.setFechaModificacion(LocalDateTime.now());
+			relacion.setFechaModificacion(LocalDate.now());
 			return usuarioRolRepository.save(relacion);
 		}
 
 		// 5. CREAR NUEVO ROL
 		UsuarioRol nuevo = new UsuarioRol(usuarioId, rolId);
 		nuevo.setEstado(1);
-		nuevo.setFechaModificacion(LocalDateTime.now());
+		nuevo.setFechaModificacion(LocalDate.now());
 
 		return usuarioRolRepository.save(nuevo);
 	}
@@ -124,7 +124,7 @@ public class UsuarioRolService {
 		}
 
 		// 4. GUARDAR FECHA MÁS ANTIGUA (preservar antigüedad)
-		LocalDateTime fechaIngreso = validationService.obtenerFechaIngresoSistema(usuarioId);
+		LocalDate fechaIngreso = validationService.obtenerFechaIngresoSistema(usuarioId);
 
 		// 5. VALIDAR QUE ES UN CAMBIO VÁLIDO
 		List<UsuarioRol> rolesActivos = rolesActuales.stream().filter(r -> r.getEstado() == 1).toList();
@@ -141,7 +141,7 @@ public class UsuarioRolService {
 		UsuarioRol nuevoRol = new UsuarioRol(usuarioId, nuevoRolId);
 		nuevoRol.setFechaCreacion(fechaIngreso); // ← PRESERVAR ANTIGÜEDAD
 		nuevoRol.setEstado(1);
-		nuevoRol.setFechaModificacion(LocalDateTime.now());
+		nuevoRol.setFechaModificacion(LocalDate.now());
 
 		usuarioRolRepository.save(nuevoRol);
 	}
@@ -163,7 +163,7 @@ public class UsuarioRolService {
 		if (relacion.isPresent()) {
 			UsuarioRol r = relacion.get();
 			r.setEstado(0); // Suspender
-			r.setFechaModificacion(LocalDateTime.now());
+			r.setFechaModificacion(LocalDate.now());
 			usuarioRolRepository.save(r);
 		}
 
@@ -183,7 +183,7 @@ public class UsuarioRolService {
 		if (relacion.isPresent()) {
 			UsuarioRol r = relacion.get();
 			r.setEstado(1); // Reactivar
-			r.setFechaModificacion(LocalDateTime.now());
+			r.setFechaModificacion(LocalDate.now());
 			usuarioRolRepository.save(r);
 		}
 
@@ -277,7 +277,7 @@ public class UsuarioRolService {
 	// ═══════════════════════════════════════════════════════
 	public UsuarioRol crearRelacion(UsuarioRol usuarioRol) {
 		usuarioRol.setEstado(1);
-		usuarioRol.setFechaModificacion(LocalDateTime.now());
+		usuarioRol.setFechaModificacion(LocalDate.now());
 		return usuarioRolRepository.save(usuarioRol);
 	}
 
@@ -307,7 +307,7 @@ public class UsuarioRolService {
 		if (relacion.isPresent()) {
 			UsuarioRol r = relacion.get();
 			r.setEstado(0);
-			r.setFechaModificacion(LocalDateTime.now());
+			r.setFechaModificacion(LocalDate.now());
 			usuarioRolRepository.save(r);
 		}
 		return relacion;
@@ -322,7 +322,7 @@ public class UsuarioRolService {
 		if (relacion.isPresent()) {
 			UsuarioRol r = relacion.get();
 			r.setEstado(1);
-			r.setFechaModificacion(LocalDateTime.now());
+			r.setFechaModificacion(LocalDate.now());
 			usuarioRolRepository.save(r);
 		}
 		return relacion;
