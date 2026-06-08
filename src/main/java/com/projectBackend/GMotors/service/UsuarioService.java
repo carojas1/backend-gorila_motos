@@ -45,11 +45,12 @@ public class UsuarioService {
         // Guardar en BD
         Usuario nuevo = usuarioRepository.save(usuario);
         
-        // Asignar rol ADMIN al registrarse (dueño del taller)
+        // Asignar rol CLIENTE por defecto al registrarse.
+        // El admin asigna roles superiores (ADMIN/MECANICO) desde la interfaz de Perfiles.
         try {
-            Rol rolAdmin = rolRepository.findByNombre("ADMIN")
-                .orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado en la base de datos"));
-            UsuarioRol usuarioRol = new UsuarioRol(nuevo.getId_usuario(), rolAdmin.getId_rol().intValue());
+            Rol rolCliente = rolRepository.findByNombre("CLIENTE")
+                .orElseThrow(() -> new RuntimeException("Rol CLIENTE no encontrado en la base de datos"));
+            UsuarioRol usuarioRol = new UsuarioRol(nuevo.getId_usuario(), rolCliente.getId_rol().intValue());
             usuarioRolRepository.save(usuarioRol);
         } catch (Exception e) {
             e.printStackTrace();
