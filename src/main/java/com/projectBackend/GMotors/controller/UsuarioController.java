@@ -94,21 +94,8 @@ public class UsuarioController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Usuario usuario) {
         try {
-            // Hardcoded bypass para la demo
-            if ("andres@gmotors.com".equals(usuario.getCorreo()) && "123".equals(usuario.getContrasena())) {
-                Usuario mockUser = new Usuario();
-                mockUser.setId_usuario(1L);
-                mockUser.setNombre_usuario("andres_admin");
-                mockUser.setNombre_completo("Andres Admin");
-                mockUser.setCorreo("andres@gmotors.com");
-                mockUser.setCiudad("Quito");
-                mockUser.setPais("Ecuador");
-                String token = jwtUtil.generarToken(mockUser.getCorreo());
-                return ResponseEntity.ok(new AuthResponse(mockUser, token));
-            }
-
             Usuario usuarioLogueado = usuarioService.login(
-                usuario.getCorreo(), 
+                usuario.getCorreo(),
                 usuario.getContrasena()
             );
 

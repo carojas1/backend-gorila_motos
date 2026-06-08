@@ -1,10 +1,3 @@
-databases:
-  - name: gorila-db
-    databaseName: gorila_motos
-    user: gorila_user
-    plan: free
-    region: virginia
-
 services:
   - type: web
     name: backend-gorila_motos
@@ -12,32 +5,56 @@ services:
     plan: free
     region: virginia
     branch: main
+    healthCheckPath: /actuator/health
     envVars:
+      # ── Perfil activo ────────────────────────────────────────────────────────
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+
+      # ── Base de datos Supabase PostgreSQL ────────────────────────────────────
+      # INSTRUCCIONES: En Render → Environment, configurar MANUALMENTE:
+      #
+      # DB_URL     = jdbc:postgresql://db.wzoxehtmyoswmieljcpy.supabase.co:5432/postgres
+      # DB_USER    = postgres
+      # DB_PASSWORD = [el password de tu proyecto Supabase]
+      #              (Supabase → Settings → Database → Database password)
       - key: DB_URL
-        fromDatabase:
-          name: gorila-db
-          property: connectionString
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: gorila-db
-          property: password
-      - key: DB_USER
-        fromDatabase:
-          name: gorila-db
-          property: user
-      - key: ALLOWED_ORIGINS
-        value: https://gorila-motos.vercel.app
-      - key: SUPABASE_URL
-        value: https://rsztjwgbgljjkrnrpbxi.supabase.co
-      - key: SUPABASE_ANON_KEY
         sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # ── JWT Secret ───────────────────────────────────────────────────────────
+      # Generar un string aleatorio seguro de ≥64 caracteres
+      - key: JWT_SECRET
+        sync: false
+
+      # ── Supabase API ─────────────────────────────────────────────────────────
+      - key: SUPABASE_URL
+        value: https://wzoxehtmyoswmieljcpy.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: sb_publishable_6gM61vlR16B-m7OH5Q5Omg_TJtKOYHmno
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+
+      # ── Email Resend ──────────────────────────────────────────────────────────
       - key: RESEND_API_KEY
         sync: false
+
+      # ── CORS ──────────────────────────────────────────────────────────────────
+      # Agregar todas las URLs de Vercel donde está el frontend
+      - key: ALLOWED_ORIGINS
+        value: https://gorila-motos.vercel.app,https://gmotors-frontend.vercel.app,https://gmotors-frontend-git-main-andres-rojas-projects-495124e8.vercel.app
+
+      # ── Config JWT ────────────────────────────────────────────────────────────
       - key: JWT_EXPIRATION_MINUTES
         value: "120"
+
+      # ── GitLab (deshabilitado) ────────────────────────────────────────────────
       - key: GITLAB_ENABLED
         value: "false"
+
+      # ── Entorno para métricas ────────────────────────────────────────────────
+      - key: APP_ENV
+        value: production

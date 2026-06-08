@@ -1,7 +1,7 @@
 package com.projectBackend.GMotors.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -27,15 +27,15 @@ public class UsuarioRol {
     @JoinColumn(name = "id_rol", insertable = false, updatable = false)
     private Rol rol;
 
-    // NUEVAS COLUMNAS
+    // Columnas — fecha_creacion y fecha_modificacion son DATE en PostgreSQL → LocalDate
     @Column(name = "estado", nullable = false)
     private Integer estado = 1; // 1 = activo, 0 = inactivo
 
     @Column(name = "fecha_creacion", nullable = false)
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    private LocalDate fechaCreacion = LocalDate.now();
 
     @Column(name = "fecha_modificacion")
-    private LocalDateTime fechaModificacion;
+    private LocalDate fechaModificacion;
 
     // CONSTRUCTORES
     public UsuarioRol() {}
@@ -44,7 +44,7 @@ public class UsuarioRol {
         this.idUsuario = idUsuario;
         this.idRol = idRol;
         this.estado = 1;
-        this.fechaCreacion = LocalDateTime.now();
+        this.fechaCreacion = LocalDate.now();
     }
 
     // GETTERS & SETTERS
@@ -58,23 +58,20 @@ public class UsuarioRol {
     public Rol getRol() { return rol; }
 
     public Integer getEstado() { return estado; }
-    public void setEstado(Integer estado) { 
-        this.estado = estado; 
-        this.fechaModificacion = LocalDateTime.now();
+    public void setEstado(Integer estado) {
+        this.estado = estado;
+        this.fechaModificacion = LocalDate.now();
     }
 
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+    public void setFechaCreacion(LocalDate fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
-    
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
 
-    public LocalDateTime getFechaModificacion() { return fechaModificacion; }
-    public void setFechaModificacion(LocalDateTime fechaModificacion) {
+    public LocalDate getFechaCreacion() { return fechaCreacion; }
+
+    public LocalDate getFechaModificacion() { return fechaModificacion; }
+    public void setFechaModificacion(LocalDate fechaModificacion) {
         this.fechaModificacion = fechaModificacion;
     }
-    
-    
-    
-    
 }
+

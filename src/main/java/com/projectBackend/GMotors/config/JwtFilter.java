@@ -36,9 +36,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Rutas públicas
-        if (path.equals("/api/health") ||path.startsWith("/images/") ||
+        // Rutas públicas — sin verificación de token
+        if (path.equals("/api/health") || path.startsWith("/images/") ||
         		path.startsWith("/api/metrics/reports/") ||
+                // Healthcheck de Render — crítico para que el servicio no se marque como caído
+                path.startsWith("/actuator/") || path.equals("/actuator") ||
         	    path.equals("/api/usuarios/login") ||
         	    (path.equals("/api/usuarios") && request.getMethod().equals("POST")) ||
         	    (path.equals("/api/motos/ocr/placa") && request.getMethod().equals("POST")) ||

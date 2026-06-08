@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.projectBackend.GMotors.model.Rol;
 import com.projectBackend.GMotors.model.Usuario;
 import com.projectBackend.GMotors.model.UsuarioRol;
+import com.projectBackend.GMotors.repository.RolRepository;
 import com.projectBackend.GMotors.repository.UsuarioRepository;
 import com.projectBackend.GMotors.repository.UsuarioRolRepository;
 
@@ -25,7 +27,10 @@ public class UsuarioService {
 	
 	@Autowired
 	private UsuarioRolRepository usuarioRolRepository;
-	
+
+	@Autowired
+	private RolRepository rolRepository;
+
 	@Autowired
 	private SupabaseStorageService supabaseStorageService;
 
@@ -40,14 +45,13 @@ public class UsuarioService {
         // Guardar en BD
         Usuario nuevo = usuarioRepository.save(usuario);
         
-        // Se creo por Default: Id_Rol: 2 (Usuario)
+        // Asignar rol ADMIN al registrarse (dueño del taller)
         try {
-            UsuarioRol usuarioRol = new UsuarioRol(nuevo.getId_usuario(), 2);
+            Rol rolAdmin = rolRepository.findByNombre("ADMIN")
+                .orElseThrow(() -> new RuntimeException("Rol ADMIN no encontrado en la base de datos"));
+            UsuarioRol usuarioRol = new UsuarioRol(nuevo.getId_usuario(), rolAdmin.getId_rol().intValue());
             usuarioRolRepository.save(usuarioRol);
-            //System.out.println("[REGISTRO]  Usuario " + nuevo.getNombre_usuario() + 
-                            // " registrado con rol CLIENTE");
         } catch (Exception e) {
-            //System.err.println("[REGISTRO] ⚠ Error al asignar rol CLIENTE: " + e.getMessage());
             e.printStackTrace();
         }
         

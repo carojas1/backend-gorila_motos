@@ -16,7 +16,7 @@ spring.log
 spring-err.log
 
 # Secrets / env
-application-prod.properties
+# application-prod.properties — NOW tracked (uses ${ENV_VARS}, no hardcoded secrets)
 .env
 
 # Reports

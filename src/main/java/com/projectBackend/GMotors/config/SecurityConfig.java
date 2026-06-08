@@ -33,7 +33,9 @@ public class SecurityConfig {
                 // ============================
                 //   RUTAS PÚBLICAS (SIN TOKEN)
                 // ============================
-            	.requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                // Healthcheck de Render — DEBE ser público o Render cree que el servicio está caído
+                .requestMatchers("/actuator/health", "/actuator/info", "/actuator/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
             	.requestMatchers("/api/metrics/reports/**").permitAll()	
                 .requestMatchers("/api/usuarios/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
