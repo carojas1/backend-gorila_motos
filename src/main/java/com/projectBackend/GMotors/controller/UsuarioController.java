@@ -35,9 +35,14 @@ public class UsuarioController {
 
     // ✅ POST /api/usuarios → Crear
     @PostMapping
-    public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
-        Usuario nuevoUsuario = usuarioService.crearUsuario(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario); // 201
+    public ResponseEntity<?> crear(@RequestBody Usuario usuario) {
+        try {
+            Usuario nuevoUsuario = usuarioService.crearUsuario(usuario);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario); // 201
+        } catch (RuntimeException e) {
+            // 409 Conflict si el correo ya existe (más descriptivo que 500)
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
     }
 
     // ✅ GET /api/usuarios/{id} → Obtener por ID (incluye roles frescos, sin contraseña)

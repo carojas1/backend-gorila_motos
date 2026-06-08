@@ -38,7 +38,12 @@ public class UsuarioService {
 
 	// Crear Usuario
 	public Usuario crearUsuario(Usuario usuario) {
-		
+
+        // Verificar que el correo no esté ya registrado
+        if (usuarioRepository.findByCorreo(usuario.getCorreo()).isPresent()) {
+            throw new RuntimeException("Este correo ya está registrado. Inicia sesión o usa '¿Olvidaste tu contraseña?'.");
+        }
+
         // Encriptar la contraseña antes de guardar
         usuario.setContrasena(passwordEncoder.encode(usuario.getContrasena()));
 
