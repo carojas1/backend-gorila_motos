@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import com.projectBackend.GMotors.config.JwtUtil;
 import com.projectBackend.GMotors.dto.AuthResponse;
 import com.projectBackend.GMotors.model.Usuario;
+import com.projectBackend.GMotors.model.UsuarioRol;
 import com.projectBackend.GMotors.service.UsuarioService;
 import com.projectBackend.GMotors.service.SupabaseStorageService;
 
@@ -39,14 +40,22 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario); // 201
     }
 
-    // ✅ GET /api/usuarios/{id} → Obtener por ID
+    // ✅ GET /api/usuarios/{id} → Obtener por ID (incluye roles frescos, sin contraseña)
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> obtenerPorId(@PathVariable Long id) {
-        // Tu service devuelve Optional → lo manejamos aquí
         Optional<Usuario> usuarioOpt = usuarioService.buscarPorId(id);
-        
+
         if (usuarioOpt.isPresent()) {
-            return ResponseEntity.ok(usuarioOpt.get()); // 200 + usuario
+            Usuario u = usuarioOpt.get();
+            // Cargar roles actuales desde la BD (resuelve localStorage con datos obsoletos)
+            try {
+                List<UsuarioRol> roles = usuarioService.obtenerRolesUsuario(id);
+                u.setRoles(roles);
+            } catch (Exception ignored) {
+                // Si falla la carga de roles, devolver usuario sin roles
+            }
+            u.setContrasena(null); // Nunca enviar el hash al frontend
+            return ResponseEntity.ok(u);
         } else {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
