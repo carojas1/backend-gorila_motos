@@ -3,6 +3,7 @@ package com.projectBackend.GMotors.model;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "motos", uniqueConstraints = @UniqueConstraint(columnNames = "placa"))
@@ -25,9 +26,11 @@ public class Moto {
 	@Column(nullable = false, length = 100)
 	private String modelo;
 
+	@JsonProperty("nombre_moto")
 	@Column(name = "nombremoto", nullable = true, length = 100)
 	private String nombreMoto;
-	
+
+	@JsonProperty("tipo_moto")
 	@Column(name = "tipo_moto", nullable = false, length = 255)
 	private String tipoMoto;
 	
@@ -40,8 +43,9 @@ public class Moto {
 	@Column(name = "id_usuario", nullable = false)
 	private Long idUsuario;
 
+	@JsonProperty("ruta_imagen_motos")
 	@Column(name = "ruta_imagen_motos", nullable = false, length = 255)
-	private String rutaImagenMotos = "Desconocido"; 
+	private String rutaImagenMotos = "Desconocido";
 	
 	
 	// Inner Join: Por Cada placa, extraer la información del dueño ignorando algunos campos
@@ -99,10 +103,12 @@ public class Moto {
 		this.placa = placa;
 	}
 	
+	@JsonProperty("tipo_moto")
 	public String getTipoMoto() {
 		return tipoMoto;
 	}
 
+	@JsonProperty("tipo_moto")
 	public void setTipoMoto(String tipoMoto) {
 		this.tipoMoto = tipoMoto;
 	}
@@ -139,10 +145,12 @@ public class Moto {
 		this.modelo = modelo;
 	}
 
+	@JsonProperty("nombre_moto")
 	public String getNombreMoto() {
 	    return nombreMoto;
 	}
 
+	@JsonProperty("nombre_moto")
 	public void setNombreMoto(String nombreMoto) {
 	    this.nombreMoto = nombreMoto;
 	}
@@ -163,10 +171,12 @@ public class Moto {
 		this.cilindraje = cilindraje;
 	}
 
+	@JsonProperty("ruta_imagen_motos")
 	public String getRutaImagenMotos() {
 		return rutaImagenMotos;
 	}
 
+	@JsonProperty("ruta_imagen_motos")
 	public void setRutaImagenMotos(String rutaImagenMotos) {
 		this.rutaImagenMotos = rutaImagenMotos != null ? rutaImagenMotos : "Desconocido";
 	}

@@ -7,10 +7,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpMethod;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 public class SecurityConfig {
@@ -41,45 +43,64 @@ public class SecurityConfig {
             .csrf(cs -> cs.disable())
             .httpBasic(basic -> basic.disable())
             .formLogin(form -> form.disable())
-            .cors(cors -> cors.configure(http))
+            // CORS correcto: usa Customizer.withDefaults() para que Spring Security
+            // delegue en el CorsConfigurationSource del WebMvcConfigurer registrado en CorsConfig.
+            .cors(Customizer.withDefaults())
+
+            // ── Entrypoint explícito: sin token → 401 (no 403 por defecto) ──────
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((req, res, authEx) ->
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Se requiere autenticación"))
+                .accessDeniedHandler((req, res, accEx) ->
+                    res.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado"))
+            )
+
             .authorizeHttpRequests(auth -> auth
 
                 // ============================
                 //   RUTAS PÚBLICAS (SIN TOKEN)
                 // ============================
-                // Healthcheck de Render — DEBE ser público o Render cree que el servicio está caído
+                // Healthcheck de Render — DEBE ser público
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
-            	.requestMatchers("/api/metrics/reports/**").permitAll()	
+                .requestMatchers("/api/metrics/reports/**").permitAll()
                 .requestMatchers("/api/usuarios/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
                 .requestMatchers("/images/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/usuarios/upload").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/motos/ocr/placa").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/motos/ocr/buscar-dueno").permitAll()
-             
 
-                .requestMatchers(HttpMethod.GET, "/api/rutas/usuario/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/rutas/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/rutas").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/rutas/**").permitAll()
+                .requestMatchers(HttpMethod.GET,    "/api/rutas/usuario/**").permitAll()
+                .requestMatchers(HttpMethod.GET,    "/api/rutas/**").permitAll()
+                .requestMatchers(HttpMethod.POST,   "/api/rutas").permitAll()
+                .requestMatchers(HttpMethod.PUT,    "/api/rutas/**").permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/api/rutas/**").permitAll()
                 .requestMatchers("/api/usuarios/recuperacion/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/quick-accounts/create").permitAll()
-                
+
                 // ============================
                 //   RUTAS PROTEGIDAS
                 // ============================
                 .requestMatchers("/api/usuarios/**").authenticated()
-                .requestMatchers("/api/motos/**").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/registros/**").authenticated()  
-                .requestMatchers(HttpMethod.GET, "/api/registros/**").authenticated()  
+
+                // Motos: reglas explícitas por método para evitar ambigüedad con PathPatternParser
+                .requestMatchers(HttpMethod.GET,    "/api/motos/**").authenticated()
+                .requestMatchers(HttpMethod.GET,    "/api/motos").authenticated()
+                .requestMatchers(HttpMethod.POST,   "/api/motos/upload").authenticated()
+                .requestMatchers(HttpMethod.POST,   "/api/motos").authenticated()
+                .requestMatchers(HttpMethod.PUT,    "/api/motos/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/motos/**").authenticated()
+
+                .requestMatchers(HttpMethod.PUT,  "/api/registros/**").authenticated()
+                .requestMatchers(HttpMethod.GET,  "/api/registros/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/registros/**").authenticated()
-                // Cualquier otra ruta, requiere token
+
+                // Cualquier otra ruta requiere token
                 .anyRequest().authenticated()
             )
 
-            // Filtro JWT ANTES del filtro de autenticación
+            // Filtro JWT ANTES del filtro de autenticación estándar
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
