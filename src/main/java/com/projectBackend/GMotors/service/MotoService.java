@@ -15,12 +15,15 @@ public class MotoService {
 
     @Autowired
     private MotoRepository motoRepository;
-    
+
     @Autowired
     private SupabaseStorageService supabaseStorageService;
-    
+
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private AlertaMantenimientoService alertaService;
 
     // ✅ Crear moto (CON validación de usuario)
     @Transactional
@@ -74,7 +77,11 @@ public class MotoService {
 	    if (motoActualizada.getNombreMoto() != null) {
 		        motoDB.setNombreMoto(motoActualizada.getNombreMoto());
 	    }
+	    boolean kmActualizado = false;
 	    if (motoActualizada.getKilometraje() != null) {
+	        if (!motoActualizada.getKilometraje().equals(motoDB.getKilometraje())) {
+	            kmActualizado = true;
+	        }
 	        motoDB.setKilometraje(motoActualizada.getKilometraje());
 	    }
 	    if (motoActualizada.getCilindraje() != null) {
@@ -101,7 +108,12 @@ public class MotoService {
 	        motoDB.setId_usuario(motoActualizada.getId_usuario());
 	    }
 
-	    return motoRepository.save(motoDB);
+	    Moto guardada = motoRepository.save(motoDB);
+	    // Disparar verificación de alertas async cuando el km aumenta
+	    if (kmActualizado) {
+	        alertaService.verificarYEnviarAlertas(guardada);
+	    }
+	    return guardada;
 	}
 
 

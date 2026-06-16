@@ -91,7 +91,7 @@ public class ResendEmailService {
     }
 
     /* ══════════════════════════════════════════════
-       EMAIL 3 — Alerta de mantenimiento próximo
+       EMAIL 3 — Alerta de mantenimiento próximo (legacy)
        ══════════════════════════════════════════════ */
     public boolean enviarAlertaMantenimiento(String correoCliente, String nombreCliente,
                                               String placa, String marca, String modelo,
@@ -102,10 +102,66 @@ public class ResendEmailService {
             "</strong> (placa <strong>" + placa + "</strong>) tiene programado un cambio de aceite en aproximadamente <strong>" +
             kmRestantes + " km</strong>.",
             "Ver detalles en el portal",
-            "https://gorila-motos.vercel.app/portal",
+            "https://gorila-motos.vercel.app/mi-moto",
             "Agenda tu cita con anticipación para evitar daños en el motor."
         );
         return enviar(correoCliente, "Mantenimiento próximo — " + placa + " · Gorila Motos", html);
+    }
+
+    /* ══════════════════════════════════════════════
+       EMAIL 5 — Mantenimiento VENCIDO (umbral cruzado)
+       ══════════════════════════════════════════════ */
+    public boolean enviarAlertaMantenimientoVencido(String correo, String nombre,
+                                                     String placa, String marca, String modelo,
+                                                     String tipo, String descripcion, int kmUmbral) {
+        String tipoLabel = tipoLabel(tipo);
+        String html = htmlBase(
+            "¡Tu moto necesita " + tipoLabel + "!",
+            "Hola <strong>" + nombre + "</strong>, tu moto <strong>" + marca + " " + modelo +
+            "</strong> (placa <strong>" + placa + "</strong>) ha alcanzado los <strong>" +
+            String.format("%,d", kmUmbral) + " km</strong> — el límite recomendado para:<br><br>" +
+            "<strong style='color:#E11428'>" + descripcion + "</strong><br><br>" +
+            "Llevar tu moto al taller lo antes posible previene daños mayores y reduce costos.",
+            "Agendar mantenimiento",
+            "https://gorila-motos.vercel.app/mi-moto",
+            "Recomendación técnica basada en el cilindraje y condiciones de rodadura ecuatorianas."
+        );
+        return enviar(correo, "⚠️ " + tipoLabel + " vencido — " + placa + " · Gorila Motos", html);
+    }
+
+    /* ══════════════════════════════════════════════
+       EMAIL 6 — Mantenimiento PRÓXIMO (se acerca el umbral)
+       ══════════════════════════════════════════════ */
+    public boolean enviarAlertaMantenimientoProximo(String correo, String nombre,
+                                                     String placa, String marca, String modelo,
+                                                     String tipo, String descripcion,
+                                                     int kmRestantes, int proximoKm) {
+        String tipoLabel = tipoLabel(tipo);
+        String html = htmlBase(
+            "Próximamente: " + tipoLabel,
+            "Hola <strong>" + nombre + "</strong>, a tu moto <strong>" + marca + " " + modelo +
+            "</strong> (placa <strong>" + placa + "</strong>) le quedan aproximadamente <strong>" +
+            String.format("%,d", kmRestantes) + " km</strong> para necesitar:<br><br>" +
+            "<strong>" + descripcion + "</strong><br><br>" +
+            "El cambio estará vencido al alcanzar los <strong>" + String.format("%,d", proximoKm) + " km</strong>.",
+            "Ver estado de mi moto",
+            "https://gorila-motos.vercel.app/mi-moto",
+            "Agenda con anticipación para evitar esperas y proteger tu motor."
+        );
+        return enviar(correo, "Próximo: " + tipoLabel + " — " + placa + " · Gorila Motos", html);
+    }
+
+    private String tipoLabel(String tipo) {
+        return switch (tipo) {
+            case "ACEITE"           -> "Cambio de aceite";
+            case "FILTRO_AIRE"      -> "Cambio de filtro de aire";
+            case "BUJIA"            -> "Cambio de bujía";
+            case "CADENA"           -> "Revisión de cadena";
+            case "LLANTA_TRASERA"   -> "Cambio de llanta trasera";
+            case "FRENOS"           -> "Revisión de frenos";
+            case "REVISION_GENERAL" -> "Revisión general";
+            default                 -> tipo.replace("_", " ").toLowerCase();
+        };
     }
 
     /* ══════════════════════════════════════════════

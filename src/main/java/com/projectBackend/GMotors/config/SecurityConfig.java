@@ -96,6 +96,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,  "/api/registros/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/registros/**").authenticated()
 
+                // Diagnósticos y alertas de mantenimiento
+                .requestMatchers(HttpMethod.POST, "/api/diagnosticos").authenticated()
+                .requestMatchers(HttpMethod.GET,  "/api/diagnosticos/**").authenticated()
+                .requestMatchers(HttpMethod.GET,  "/api/alertas/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/alertas/**").authenticated()
+
                 // Cualquier otra ruta requiere token
                 .anyRequest().authenticated()
             )
