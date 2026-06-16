@@ -40,12 +40,13 @@ public class SupabaseStorageService {
             }
 
             String nombreArchivo = generarNombreArchivo(file.getOriginalFilename());
+            // carpeta ya termina en "/" → concatenar directo evita el doble slash que rompía la subida
             String ruta = carpeta + nombreArchivo;
             byte[] fileContent = file.getBytes();
 
             String uploadUrl = String.format(
-                    "%s/storage/v1/object/%s/%s/%s",
-                    supabaseUrl, bucketName, carpeta, nombreArchivo
+                    "%s/storage/v1/object/%s/%s",
+                    supabaseUrl, bucketName, ruta
             );
 
             Request request = new Request.Builder()
