@@ -96,6 +96,22 @@ public class RegistroController {
 		try {
 			Factura factura = facturaService.actualizarFactura(idfactura, detallesDTO);
 
+			// ── Enviar la factura por correo al cliente (best-effort, NO rompe la respuesta) ──
+			try {
+				Usuario cliente = registro.getCliente();
+				String correo = cliente != null ? cliente.getCorreo() : null;
+				if (correo != null && !correo.isBlank() && !correo.endsWith("@gmotors.local")) {
+					String placa    = registro.getMoto()  != null ? registro.getMoto().getPlaca()   : "—";
+					String tipoServ = registro.getTipo()  != null ? registro.getTipo().getNombre()  : "Servicio de taller";
+					double total    = factura.getCostoTotal() != null ? factura.getCostoTotal().doubleValue() : 0.0;
+					String fecha    = factura.getFechaEmision() != null ? factura.getFechaEmision().toString() : "";
+					emailService.enviarFactura(correo, cliente.getNombre_completo(), placa, tipoServ, total, fecha, idRegistro);
+					System.out.println("[RegistroController] Factura enviada por correo a " + correo);
+				}
+			} catch (Exception mailEx) {
+				System.err.println("[RegistroController] No se pudo enviar la factura por correo: " + mailEx.getMessage());
+			}
+
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", true);
 			response.put("mensaje", "Factura actualizada exitosamente");
