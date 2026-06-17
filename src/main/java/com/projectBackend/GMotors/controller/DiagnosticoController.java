@@ -2,6 +2,7 @@ package com.projectBackend.GMotors.controller;
 
 import com.projectBackend.GMotors.model.*;
 import com.projectBackend.GMotors.repository.MotoRepository;
+import com.projectBackend.GMotors.repository.UsuarioRepository;
 import com.projectBackend.GMotors.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -18,15 +19,29 @@ public class DiagnosticoController {
     @Autowired private DiagnosticoService            diagnosticoService;
     @Autowired private AlertaMantenimientoService    alertaService;
     @Autowired private MotoRepository                motoRepo;
+    @Autowired private UsuarioRepository             usuarioRepo;
+    @Autowired private ResendEmailService            emailService;
 
     /* ── Crear diagnóstico (mecánico) ── */
     @PostMapping("/diagnosticos")
     public ResponseEntity<?> crear(@RequestBody DiagnosticoMoto diagnostico) {
         try {
             DiagnosticoMoto creado = diagnosticoService.crear(diagnostico);
-            // Disparar alertas async tras actualizar km
-            motoRepo.findById(creado.getIdMoto())
-                .ifPresent(alertaService::verificarYEnviarAlertas);
+            // Tras guardar: enviar reporte al cliente + disparar alertas de km
+            motoRepo.findById(creado.getIdMoto()).ifPresent(moto -> {
+                // 1. Correo automático con el resultado del diagnóstico
+                try {
+                    usuarioRepo.findById(moto.getId_usuario()).ifPresent(dueno ->
+                        emailService.enviarDiagnostico(
+                            dueno.getCorreo(), dueno.getNombre_completo(),
+                            moto.getPlaca(), moto.getMarca(), moto.getModelo(),
+                            creado.getKilometrajeIngreso() != null ? creado.getKilometrajeIngreso() : moto.getKilometraje(),
+                            creado.getObservacionesGenerales(), creado.getDetalles()
+                        ));
+                } catch (Exception ignore) { /* el correo no debe bloquear el guardado */ }
+                // 2. Alertas de mantenimiento por km (async)
+                alertaService.verificarYEnviarAlertas(moto);
+            });
             return ResponseEntity.status(HttpStatus.CREATED).body(creado);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

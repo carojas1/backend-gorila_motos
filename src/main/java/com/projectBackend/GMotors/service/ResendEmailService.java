@@ -268,6 +268,95 @@ public class ResendEmailService {
     }
 
     /* ══════════════════════════════════════════════
+       EMAIL 8 — Reporte de diagnóstico mecánico
+       Se envía automáticamente al guardar un diagnóstico.
+       ══════════════════════════════════════════════ */
+    public boolean enviarDiagnostico(String correo, String nombre,
+                                     String placa, String marca, String modelo,
+                                     int kmIngreso, String observaciones,
+                                     java.util.List<com.projectBackend.GMotors.model.DetalleDiagnostico> detalles) {
+        if (correo == null || correo.isBlank() || correo.endsWith("@gmotors.local")) return false;
+
+        int malos    = 0, regulares = 0;
+        StringBuilder filas = new StringBuilder();
+        if (detalles != null) {
+            for (var d : detalles) {
+                int est = d.getEstado() == null ? 1 : d.getEstado();
+                if (est >= 3) malos++;
+                else if (est == 2) regulares++;
+                if (est >= 2) filas.append(filaDiagnostico(d.getParte(), est, d.getObservacion()));
+            }
+        }
+
+        boolean critico = malos > 0;
+        String titulo = critico
+            ? "Tu moto necesita atención"
+            : (regulares > 0 ? "Revisión con observaciones" : "Tu moto está en buen estado");
+        String acentoColor = critico ? "#E11428" : (regulares > 0 ? "#F59E0B" : "#10B981");
+        String resumen = critico
+            ? malos + " punto(s) en estado CRÍTICO" + (regulares > 0 ? " y " + regulares + " a vigilar." : ".")
+            : (regulares > 0 ? regulares + " punto(s) a vigilar — nada crítico." : "Todos los puntos revisados están en buen estado. ¡Listo para rodar!");
+
+        String tabla = filas.length() > 0
+            ? "<table style='width:100%;border-collapse:collapse;margin:8px 0 4px'>" +
+              "<tr><th style='text-align:left;padding:8px 10px;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Componente</th>" +
+              "<th style='text-align:left;padding:8px 10px;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Estado</th></tr>" +
+              filas + "</table>"
+            : "<p style='margin:8px 0;color:#10B981;font-size:14px;font-weight:600'>✓ Sin observaciones — todo en orden.</p>";
+
+        String cuerpo =
+            "Hola <strong>" + nombre + "</strong>, realizamos el diagnóstico de tu moto <strong>" +
+            marca + " " + modelo + "</strong> (placa <strong>" + placa + "</strong>) con " +
+            String.format("%,d", kmIngreso) + " km.<br><br>" +
+            "<span style='color:" + acentoColor + ";font-weight:800'>" + resumen + "</span>" +
+            (observaciones != null && !observaciones.isBlank()
+                ? "<br><br><em style='color:#666'>Nota del mecánico: " + observaciones + "</em>" : "") +
+            "<br>" + tabla;
+
+        String html = htmlBase(
+            (critico ? "⚠️ " : "") + titulo,
+            cuerpo,
+            "Agendar servicio",
+            "https://gorila-motos.vercel.app/mi-moto",
+            "Diagnóstico realizado por un técnico de Gorila Motos. Te recomendamos atender los puntos marcados en rojo lo antes posible."
+        );
+        String asunto = critico
+            ? "⚠️ Diagnóstico: tu moto " + placa + " necesita atención — Gorila Motos"
+            : "Diagnóstico de tu moto " + placa + " — Gorila Motos";
+        return enviar(correo, asunto, html);
+    }
+
+    /** Mapa parte → severidad + acción recomendada */
+    private String filaDiagnostico(String parte, int estado, String obs) {
+        boolean malo = estado >= 3;
+        String estLabel = malo ? "MALO — requiere cambio/reparación" : "REGULAR — vigilar";
+        String color    = malo ? "#E11428" : "#F59E0B";
+        String bg       = malo ? "rgba(225,20,40,0.08)" : "rgba(245,158,11,0.08)";
+        String parteLabel = parteDiagnosticoLabel(parte);
+        String obsTxt = (obs != null && !obs.isBlank()) ? "<br><span style='font-size:11px;color:#9CA3AF'>" + obs + "</span>" : "";
+        return "<tr>" +
+               "<td style='padding:10px;border-bottom:1px solid #f3f3f3;font-size:13px;color:#111;font-weight:600'>" + parteLabel + obsTxt + "</td>" +
+               "<td style='padding:10px;border-bottom:1px solid #f3f3f3'>" +
+               "<span style='font-size:11px;font-weight:700;color:" + color + ";background:" + bg + ";padding:3px 8px;border-radius:6px'>" + estLabel + "</span>" +
+               "</td></tr>";
+    }
+
+    private String parteDiagnosticoLabel(String parte) {
+        if (parte == null) return "Componente";
+        return switch (parte.toUpperCase()) {
+            case "MOTOR"        -> "Motor";
+            case "TRANSMISION"  -> "Transmisión / embrague";
+            case "FRENOS"       -> "Frenos";
+            case "LLANTAS"      -> "Llantas";
+            case "SUSPENSION"   -> "Suspensión";
+            case "ELECTRICO"    -> "Sistema eléctrico";
+            case "CARROCERIA"   -> "Carrocería";
+            case "REFRIGERACION"-> "Refrigeración";
+            default             -> parte;
+        };
+    }
+
+    /* ══════════════════════════════════════════════
        EMAIL 4 — Bienvenida al registrarse
        ══════════════════════════════════════════════ */
     public boolean enviarBienvenida(String correo, String nombre) {
