@@ -1,13 +1,17 @@
 package com.projectBackend.GMotors.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import jakarta.mail.internet.MimeMessage;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,13 +24,44 @@ public class ResendEmailService {
     @Value("${resend.from-email:noreply@gorilamoto.com}")
     private String fromEmail;
 
+    /* ── SMTP (Gmail) — alternativa SIN dominio propio ── */
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
+
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${mail.from-name:Gorila Motos}")
+    private String fromName;
+
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String RESEND_URL = "https://api.resend.com/emails";
 
-    /* ── Envío genérico ── */
+    /* ── Envío genérico ──
+       Prioridad: 1) Gmail SMTP si está configurado (no requiere dominio y
+       entrega a cualquier correo), 2) Resend como respaldo. */
     private boolean enviar(String to, String subject, String html) {
+        /* 1) Gmail SMTP */
+        if (mailSender != null && mailUsername != null && !mailUsername.isBlank()) {
+            try {
+                MimeMessage msg = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
+                helper.setFrom(mailUsername, fromName);
+                helper.setTo(to);
+                helper.setSubject(subject);
+                helper.setText(html, true);   // true = HTML
+                mailSender.send(msg);
+                System.out.println("[EMAIL] (SMTP/Gmail) Enviado a " + to);
+                return true;
+            } catch (Exception e) {
+                System.err.println("[EMAIL] (SMTP) Error a " + to + ": " + e.getMessage() + " — intento con Resend si existe");
+                // cae al respaldo Resend
+            }
+        }
+
+        /* 2) Resend (requiere dominio verificado para terceros) */
         if (resendApiKey == null || resendApiKey.isBlank()) {
-            System.out.println("[EMAIL] API key no configurada — email no enviado a: " + to);
+            System.out.println("[EMAIL] Sin SMTP ni Resend configurado — email no enviado a: " + to);
             return false;
         }
         try {
@@ -35,14 +70,14 @@ public class ResendEmailService {
             headers.setBearerAuth(resendApiKey);
 
             Map<String, Object> body = new HashMap<>();
-            body.put("from", "Gorila Motos <" + fromEmail + ">");
+            body.put("from", fromName + " <" + fromEmail + ">");
             body.put("to", to);
             body.put("subject", subject);
             body.put("html", html);
 
             HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, headers);
             ResponseEntity<String> res = restTemplate.postForEntity(RESEND_URL, req, String.class);
-            System.out.println("[EMAIL] Enviado a " + to + " — status: " + res.getStatusCode());
+            System.out.println("[EMAIL] (Resend) Enviado a " + to + " — status: " + res.getStatusCode());
             return res.getStatusCode().is2xxSuccessful();
         } catch (Exception e) {
             System.err.println("[EMAIL] Error al enviar a " + to + ": " + e.getMessage());
