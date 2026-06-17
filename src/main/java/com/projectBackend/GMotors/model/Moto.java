@@ -44,7 +44,7 @@ public class Moto {
 	private Long idUsuario;
 
 	@JsonProperty("ruta_imagen_motos")
-	@Column(name = "ruta_imagen_motos", nullable = false, length = 255)
+	@Column(name = "ruta_imagen_motos", nullable = false, columnDefinition = "TEXT")
 	private String rutaImagenMotos = "Desconocido";
 	
 	
