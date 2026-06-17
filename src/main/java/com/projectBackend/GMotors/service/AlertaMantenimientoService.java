@@ -44,7 +44,7 @@ public class AlertaMantenimientoService {
             int kmRestante      = proximoUmbral - kmActual;
 
             String estado = porcentaje >= 100 ? "VENCIDO"
-                          : porcentaje >= 70  ? "PROXIMO"   // antes 80% → aviso más temprano
+                          : porcentaje >= 80  ? "PROXIMO"
                           :                    "OK";
 
             EstadoMantenimiento em = new EstadoMantenimiento();
@@ -95,7 +95,7 @@ public class AlertaMantenimientoService {
             // ── Alerta de aproximación (dentro del 30% del próximo intervalo) ──
             int nextUmbral = umbral + intervalo;
             int kmRestante = nextUmbral - kmActual;
-            if (kmRestante <= (int)(intervalo * 0.30)) {
+            if (kmRestante <= (int)(intervalo * 0.20)) {
                 String tipoProximo = p.getTipoMantenimiento() + "_PROXIMO";
                 if (!alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoProximo, nextUmbral)) {
                     emailService.enviarAlertaMantenimientoProximo(

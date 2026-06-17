@@ -103,7 +103,8 @@ public class UsuarioRolService {
 
 	/**
 	 * CAMBIAR CATEGORÍA - Promoción formal (Cliente → Mecánico, Mecánico → Admin)
-	 * DELETE todos los roles + INSERT nuevo preservando fecha_creacion más antigua
+	 * Desactiva todos los roles actuales y activa/crea el nuevo.
+	 * Usa soft-update para evitar conflictos JPA con deleteAll + save.
 	 */
 	@Transactional
 	public void cambiarCategoria(Long usuarioId, Integer nuevoRolId, Long adminId) {
@@ -116,34 +117,46 @@ public class UsuarioRolService {
 			throw new IllegalArgumentException("No puedes cambiar tu propia categoría");
 		}
 
-		// 3. OBTENER TODOS LOS ROLES ACTUALES (activos e inactivos)
+		// 3. OBTENER TODOS LOS ROLES ACTUALES
 		List<UsuarioRol> rolesActuales = usuarioRolRepository.findByIdUsuario(usuarioId);
 
 		if (rolesActuales.isEmpty()) {
 			throw new IllegalStateException("Usuario sin roles");
 		}
 
-		// 4. GUARDAR FECHA MÁS ANTIGUA (preservar antigüedad)
+		// 4. PRESERVAR FECHA MÁS ANTIGUA
 		LocalDate fechaIngreso = validationService.obtenerFechaIngresoSistema(usuarioId);
 
 		// 5. VALIDAR QUE ES UN CAMBIO VÁLIDO
 		List<UsuarioRol> rolesActivos = rolesActuales.stream().filter(r -> r.getEstado() == 1).toList();
-
 		if (!rolesActivos.isEmpty()) {
 			Integer categoriaActual = rolesActivos.get(0).getIdRol();
 			validationService.validarCambioCategoria(categoriaActual, nuevoRolId);
 		}
 
-		// 6. DELETE TODOS LOS ROLES (activos e inactivos)
-		usuarioRolRepository.deleteAll(rolesActuales);
+		// 6. DESACTIVAR TODOS LOS ROLES (soft-delete: estado=0)
+		rolesActuales.forEach(r -> {
+			r.setEstado(0);
+			r.setFechaModificacion(LocalDate.now());
+		});
+		usuarioRolRepository.saveAll(rolesActuales);
 
-		// 7. INSERT NUEVO ROL CON FECHA ORIGINAL
-		UsuarioRol nuevoRol = new UsuarioRol(usuarioId, nuevoRolId);
-		nuevoRol.setFechaCreacion(fechaIngreso); // ← PRESERVAR ANTIGÜEDAD
-		nuevoRol.setEstado(1);
-		nuevoRol.setFechaModificacion(LocalDate.now());
-
-		usuarioRolRepository.save(nuevoRol);
+		// 7. ACTIVAR O CREAR EL NUEVO ROL
+		rolesActuales.stream()
+			.filter(r -> r.getIdRol().equals(nuevoRolId))
+			.findFirst()
+			.ifPresentOrElse(existente -> {
+				existente.setEstado(1);
+				existente.setFechaCreacion(fechaIngreso);
+				existente.setFechaModificacion(LocalDate.now());
+				usuarioRolRepository.save(existente);
+			}, () -> {
+				UsuarioRol nuevo = new UsuarioRol(usuarioId, nuevoRolId);
+				nuevo.setFechaCreacion(fechaIngreso);
+				nuevo.setEstado(1);
+				nuevo.setFechaModificacion(LocalDate.now());
+				usuarioRolRepository.save(nuevo);
+			});
 	}
 
 	/**
@@ -260,12 +273,12 @@ public class UsuarioRolService {
 	public String obtenerRolPrincipal(Long usuarioId) {
 		List<UsuarioRol> roles = usuarioRolRepository.findByIdUsuarioAndEstado(usuarioId, 1);
 
-		// Prioridad: admin > mecanico > cliente
-		if (roles.stream().anyMatch(r -> r.getIdRol() == 3))
-			return "admin";
-		if (roles.stream().anyMatch(r -> r.getIdRol() == 2))
-			return "mecanico";
+		// Prioridad: admin(1) > mecanico(3) > cliente(2) — según seeder
 		if (roles.stream().anyMatch(r -> r.getIdRol() == 1))
+			return "admin";
+		if (roles.stream().anyMatch(r -> r.getIdRol() == 3))
+			return "mecanico";
+		if (roles.stream().anyMatch(r -> r.getIdRol() == 2))
 			return "cliente";
 
 		throw new IllegalStateException("Usuario sin roles activos");

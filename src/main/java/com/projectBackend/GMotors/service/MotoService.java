@@ -90,19 +90,17 @@ public class MotoService {
 	    if (motoActualizada.getTipoMoto() != null) {
 	        motoDB.setTipoMoto(motoActualizada.getTipoMoto()); 
 	    }
-	    if (motoActualizada.getRuta_imagenMotos() != null) {
-	        // Solo intentar borrar en Supabase si la imagen anterior era una URL http (no base64 ni "Desconocido")
+	    String nuevaFoto = motoActualizada.getRuta_imagenMotos();
+	    if (nuevaFoto != null && !nuevaFoto.equals("Desconocido") && !nuevaFoto.isBlank()) {
 	        String anterior = motoDB.getRuta_imagenMotos();
-	        if (anterior != null && anterior.startsWith("http") &&
-	            !anterior.equals(motoActualizada.getRuta_imagenMotos())) {
+	        if (anterior != null && anterior.startsWith("http") && !anterior.equals(nuevaFoto)) {
 	            try {
 	                supabaseStorageService.eliminarImagen(anterior);
 	            } catch (Exception e) {
 	                System.err.println("Advertencia: No se pudo eliminar imagen anterior: " + e.getMessage());
-	                // No interrumpir el flujo si falla la eliminación
 	            }
 	        }
-	        motoDB.setRuta_imagenMotos(motoActualizada.getRuta_imagenMotos());
+	        motoDB.setRuta_imagenMotos(nuevaFoto);
 	    }
 	    if (motoActualizada.getId_usuario() != null) {
 	        motoDB.setId_usuario(motoActualizada.getId_usuario());
