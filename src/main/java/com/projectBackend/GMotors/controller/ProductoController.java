@@ -2,6 +2,7 @@ package com.projectBackend.GMotors.controller;
 
 import com.projectBackend.GMotors.model.Producto;
 import com.projectBackend.GMotors.service.ProductoService;
+import com.projectBackend.GMotors.service.ResendEmailService;
 import com.projectBackend.GMotors.service.SupabaseStorageService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +27,10 @@ public class ProductoController {
 
     @Autowired
     private ProductoService productoService;
-    
+
+    @Autowired
+    private ResendEmailService resendEmailService;
+
     @Autowired
     private SupabaseStorageService supabaseStorageService;
 
@@ -71,6 +75,26 @@ public class ProductoController {
         return ResponseEntity.notFound().build();
     }
     
+    /* ── Envío de comprobante de venta de inventario por email ── */
+    @PostMapping("/venta-comprobante")
+    public ResponseEntity<Map<String, Object>> enviarComprobanteVenta(
+            @RequestBody Map<String, Object> datos) {
+        String correo         = (String) datos.get("correo");
+        String nombreCliente  = (String) datos.get("nombreCliente");
+        String nombreProducto = (String) datos.get("nombreProducto");
+        int    cantidad       = ((Number) datos.get("cantidad")).intValue();
+        double pvp            = ((Number) datos.get("pvp")).doubleValue();
+        double total          = ((Number) datos.get("total")).doubleValue();
+        String fecha          = (String) datos.get("fecha");
+
+        boolean sent = resendEmailService.enviarComprobanteInventario(
+                correo, nombreCliente, nombreProducto, cantidad, pvp, total, fecha);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("sent", sent);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/eliminar")
     public ResponseEntity<Map<String, String>> eliminarProductos(@RequestBody List<Long> ids) {
         productoService.deleteProductos(ids);

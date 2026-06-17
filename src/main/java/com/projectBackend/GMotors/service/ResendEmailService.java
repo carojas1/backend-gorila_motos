@@ -165,6 +165,24 @@ public class ResendEmailService {
     }
 
     /* ══════════════════════════════════════════════
+       EMAIL 7 — Comprobante de venta de inventario
+       ══════════════════════════════════════════════ */
+    public boolean enviarComprobanteInventario(String correoCliente, String nombreCliente,
+                                               String nombreProducto, int cantidad,
+                                               double pvp, double total, String fecha) {
+        String detalles = "<table style='width:100%;border-collapse:collapse;margin:16px 0'>" +
+            fila("Producto",        nombreProducto) +
+            fila("Cantidad",        String.valueOf(cantidad)) +
+            fila("Precio unitario", String.format("$%.2f", pvp)) +
+            fila("Total",           "<strong style='color:#E11428;font-size:18px'>" + String.format("$%.2f", total) + "</strong>") +
+            fila("Fecha",           fecha) +
+            "</table>";
+
+        String html = htmlFactura(nombreCliente, detalles, "https://gmotors-frontend.vercel.app/portal");
+        return enviar(correoCliente, "Comprobante de compra — Gorila Motos", html);
+    }
+
+    /* ══════════════════════════════════════════════
        EMAIL 4 — Bienvenida al registrarse
        ══════════════════════════════════════════════ */
     public boolean enviarBienvenida(String correo, String nombre) {
