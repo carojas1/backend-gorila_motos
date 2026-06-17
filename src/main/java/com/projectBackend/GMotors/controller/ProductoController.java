@@ -79,16 +79,18 @@ public class ProductoController {
     @PostMapping("/venta-comprobante")
     public ResponseEntity<Map<String, Object>> enviarComprobanteVenta(
             @RequestBody Map<String, Object> datos) {
-        String correo         = (String) datos.get("correo");
-        String nombreCliente  = (String) datos.get("nombreCliente");
-        String nombreProducto = (String) datos.get("nombreProducto");
-        int    cantidad       = ((Number) datos.get("cantidad")).intValue();
-        double pvp            = ((Number) datos.get("pvp")).doubleValue();
-        double total          = ((Number) datos.get("total")).doubleValue();
-        String fecha          = (String) datos.get("fecha");
+        String correo          = (String) datos.get("correo");
+        String nombreCliente   = (String) datos.get("nombreCliente");
+        String nombreProducto  = (String) datos.get("nombreProducto");
+        String codigoProducto  = datos.get("codigoProducto") != null ? (String) datos.get("codigoProducto") : null;
+        int    cantidad        = ((Number) datos.get("cantidad")).intValue();
+        double pvp             = ((Number) datos.get("pvp")).doubleValue();
+        double total           = ((Number) datos.get("total")).doubleValue();
+        String fecha           = (String) datos.get("fecha");
+        String referencia      = datos.get("referencia") != null ? (String) datos.get("referencia") : null;
 
         boolean sent = resendEmailService.enviarComprobanteInventario(
-                correo, nombreCliente, nombreProducto, cantidad, pvp, total, fecha);
+                correo, nombreCliente, nombreProducto, codigoProducto, cantidad, pvp, total, fecha, referencia);
 
         Map<String, Object> response = new HashMap<>();
         response.put("sent", sent);

@@ -166,20 +166,105 @@ public class ResendEmailService {
 
     /* ══════════════════════════════════════════════
        EMAIL 7 — Comprobante de venta de inventario
+       Diseño elegante estilo recibo profesional
        ══════════════════════════════════════════════ */
     public boolean enviarComprobanteInventario(String correoCliente, String nombreCliente,
                                                String nombreProducto, int cantidad,
                                                double pvp, double total, String fecha) {
-        String detalles = "<table style='width:100%;border-collapse:collapse;margin:16px 0'>" +
-            fila("Producto",        nombreProducto) +
-            fila("Cantidad",        String.valueOf(cantidad)) +
-            fila("Precio unitario", String.format("$%.2f", pvp)) +
-            fila("Total",           "<strong style='color:#E11428;font-size:18px'>" + String.format("$%.2f", total) + "</strong>") +
-            fila("Fecha",           fecha) +
-            "</table>";
+        return enviarComprobanteInventario(correoCliente, nombreCliente, nombreProducto,
+                null, cantidad, pvp, total, fecha, null);
+    }
 
-        String html = htmlFactura(nombreCliente, detalles, "https://gmotors-frontend.vercel.app/portal");
-        return enviar(correoCliente, "Comprobante de compra — Gorila Motos", html);
+    public boolean enviarComprobanteInventario(String correoCliente, String nombreCliente,
+                                               String nombreProducto, String codigoProducto,
+                                               int cantidad, double pvp, double total,
+                                               String fecha, String referencia) {
+        String ref    = referencia != null ? referencia : ("GRM-" + java.time.LocalDate.now().toString().replace("-","").substring(2));
+        String codigo = codigoProducto != null ? codigoProducto : "—";
+
+        String html = htmlComprobante(nombreCliente, nombreProducto, codigo, cantidad, pvp, total, fecha, ref);
+        return enviar(correoCliente, "Comprobante de compra #" + ref + " — Gorila Motos", html);
+    }
+
+    private String htmlComprobante(String nombre, String producto, String codigo,
+                                    int cantidad, double pvp, double total,
+                                    String fecha, String referencia) {
+        String totalStr = String.format("$%.2f", total);
+        String pvpStr   = String.format("$%.2f", pvp);
+
+        return "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
+               "<meta name='viewport' content='width=device-width,initial-scale=1'></head>" +
+               "<body style='margin:0;padding:0;background:#F0F2F5;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Arial,sans-serif'>" +
+               "<table width='100%' cellpadding='0' cellspacing='0'><tr><td align='center' style='padding:40px 16px'>" +
+               "<table width='580' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.12)'>" +
+
+               /* ── Header oscuro ── */
+               "<tr><td style='background:linear-gradient(135deg,#0C0C10 0%,#1A1A22 100%);padding:30px 40px'>" +
+               "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
+               "<td><p style='margin:0;color:#ffffff;font-size:24px;font-weight:900;letter-spacing:-0.5px'>Gorila <span style='color:#E11428'>Motos</span></p>" +
+               "<p style='margin:4px 0 0;color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:3px;text-transform:uppercase'>Sistema de gestión · Ecuador</p></td>" +
+               "<td align='right'><div style='display:inline-block;background:rgba(225,20,40,0.15);border:1px solid rgba(225,20,40,0.35);border-radius:10px;padding:8px 14px'>" +
+               "<p style='margin:0;color:#E11428;font-size:10px;font-weight:900;letter-spacing:2px;text-transform:uppercase'>Comprobante</p>" +
+               "<p style='margin:2px 0 0;color:rgba(255,255,255,0.6);font-size:12px;font-weight:700'>#" + referencia + "</p>" +
+               "</div></td></tr></table></td></tr>" +
+
+               /* ── Saludo ── */
+               "<tr><td style='padding:32px 40px 0'>" +
+               "<h2 style='margin:0 0 6px;color:#111827;font-size:22px;font-weight:800'>¡Gracias por tu compra!</h2>" +
+               "<p style='margin:0;color:#6B7280;font-size:14px'>Hola <strong style='color:#111827'>" + nombre + "</strong>, aquí está tu comprobante de venta.</p>" +
+               "</td></tr>" +
+
+               /* ── Línea divisora puntuada (recibo) ── */
+               "<tr><td style='padding:24px 40px'>" +
+               "<div style='border-top:2px dashed #E5E7EB'></div></td></tr>" +
+
+               /* ── Detalle del producto ── */
+               "<tr><td style='padding:0 40px'>" +
+               "<p style='margin:0 0 14px;color:#9CA3AF;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase'>Detalle de la compra</p>" +
+               "<table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #F3F4F6'>" +
+               "<thead><tr style='background:#F9FAFB'>" +
+               "<th style='padding:10px 16px;text-align:left;color:#6B7280;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid #F3F4F6'>Producto</th>" +
+               "<th style='padding:10px 16px;text-align:center;color:#6B7280;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid #F3F4F6'>Cant.</th>" +
+               "<th style='padding:10px 16px;text-align:right;color:#6B7280;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid #F3F4F6'>P. Unit.</th>" +
+               "<th style='padding:10px 16px;text-align:right;color:#6B7280;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid #F3F4F6'>Subtotal</th>" +
+               "</tr></thead><tbody>" +
+               "<tr><td style='padding:14px 16px;color:#111827;font-size:14px;font-weight:600'>" + producto +
+               "<br><span style='font-size:11px;color:#9CA3AF;font-weight:400'>Código: " + codigo + "</span></td>" +
+               "<td style='padding:14px 16px;text-align:center;color:#374151;font-size:14px;font-weight:700'>" + cantidad + "</td>" +
+               "<td style='padding:14px 16px;text-align:right;color:#374151;font-size:14px;font-weight:600'>" + pvpStr + "</td>" +
+               "<td style='padding:14px 16px;text-align:right;color:#111827;font-size:14px;font-weight:700'>" + totalStr + "</td>" +
+               "</tr></tbody></table></td></tr>" +
+
+               /* ── Total destacado ── */
+               "<tr><td style='padding:20px 40px'>" +
+               "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
+               "<td style='background:linear-gradient(135deg,#E11428,#B91C1C);border-radius:14px;padding:18px 24px'>" +
+               "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
+               "<td><p style='margin:0;color:rgba(255,255,255,0.75);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px'>Total pagado</p>" +
+               "<p style='margin:4px 0 0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-1px'>" + totalStr + "</p></td>" +
+               "<td align='right'><p style='margin:0;color:rgba(255,255,255,0.5);font-size:11px'>" + fecha + "</p></td>" +
+               "</tr></table></td></tr></table></td></tr>" +
+
+               /* ── Línea divisora puntuada ── */
+               "<tr><td style='padding:0 40px 24px'>" +
+               "<div style='border-top:2px dashed #E5E7EB'></div></td></tr>" +
+
+               /* ── Nota informativa ── */
+               "<tr><td style='padding:0 40px 32px'>" +
+               "<div style='background:#FEF9EC;border-left:3px solid #F59E0B;border-radius:0 10px 10px 0;padding:14px 16px'>" +
+               "<p style='margin:0;color:#92400E;font-size:12px;line-height:1.6'>" +
+               "<strong>Conserva este correo</strong> como comprobante de tu compra. " +
+               "Si tienes preguntas, escríbenos a <a href='mailto:info@gorilamoto.com' style='color:#E11428'>info@gorilamoto.com</a>.</p>" +
+               "</div></td></tr>" +
+
+               /* ── Footer ── */
+               "<tr><td style='background:#F9FAFB;padding:20px 40px;border-top:1px solid #F3F4F6'>" +
+               "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
+               "<td><p style='margin:0;color:#9CA3AF;font-size:11px'>© " + java.time.Year.now().getValue() +
+               " Gorila Motos · Quito, Ecuador</p></td>" +
+               "<td align='right'><a href='https://gorila-motos.vercel.app' style='color:#E11428;font-size:11px;text-decoration:none'>gorila-motos.vercel.app</a></td>" +
+               "</tr></table></td></tr>" +
+               "</table></td></tr></table></body></html>";
     }
 
     /* ══════════════════════════════════════════════
