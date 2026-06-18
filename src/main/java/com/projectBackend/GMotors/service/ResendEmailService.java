@@ -28,6 +28,9 @@ public class ResendEmailService {
     @Value("${sendgrid.api-key:}")
     private String sendgridApiKey;
 
+    @Value("${brevo.api-key:}")
+    private String brevoApiKey;
+
     /* ── SMTP (Gmail) — bloqueado en Render free tier ── */
     @Autowired(required = false)
     private JavaMailSender mailSender;
@@ -41,22 +44,45 @@ public class ResendEmailService {
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String RESEND_URL     = "https://api.resend.com/emails";
     private static final String SENDGRID_URL   = "https://api.sendgrid.com/v3/mail/send";
+    private static final String BREVO_URL      = "https://api.brevo.com/v3/smtp/email";
 
     /* ── Envío genérico ──
-       Prioridad: 1) SendGrid (solo verifica email, sin dominio, HTTPS)
-                  2) Gmail SMTP (bloqueado en Render free tier)
-                  3) Resend (requiere dominio propio verificado) */
+       Prioridad: 1) Brevo (sin dominio, HTTPS, 300/día gratis)
+                  2) SendGrid (sin dominio, HTTPS, 100/día gratis)
+                  3) Gmail SMTP (bloqueado en Render free tier)
+                  4) Resend (requiere dominio propio verificado) */
     private boolean enviar(String to, String subject, String html) {
+        String senderEmail = (mailUsername != null && !mailUsername.isBlank())
+                ? mailUsername : "gorilamotos2026@gmail.com";
 
-        /* 1) SendGrid — HTTP API, no necesita dominio, funciona en Render */
+        /* 1) Brevo — HTTP API, sin dominio, 300 emails/día gratis */
+        if (brevoApiKey != null && !brevoApiKey.isBlank()) {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("api-key", brevoApiKey);
+
+                Map<String, Object> body = new HashMap<>();
+                body.put("sender", Map.of("email", senderEmail, "name", fromName));
+                body.put("to", List.of(Map.of("email", to)));
+                body.put("subject", subject);
+                body.put("htmlContent", html);
+
+                HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, headers);
+                ResponseEntity<String> res = restTemplate.postForEntity(BREVO_URL, req, String.class);
+                System.out.println("[EMAIL] (Brevo) Enviado a " + to + " — status: " + res.getStatusCode());
+                return res.getStatusCode().is2xxSuccessful();
+            } catch (Exception e) {
+                System.err.println("[EMAIL] (Brevo) Error a " + to + ": " + e.getMessage());
+            }
+        }
+
+        /* 2) SendGrid — HTTP API, no necesita dominio, funciona en Render */
         if (sendgridApiKey != null && !sendgridApiKey.isBlank()) {
             try {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 headers.setBearerAuth(sendgridApiKey);
-
-                String senderEmail = (mailUsername != null && !mailUsername.isBlank())
-                        ? mailUsername : "gorilamotos2026@gmail.com";
 
                 Map<String, Object> body = new HashMap<>();
                 body.put("personalizations", List.of(Map.of("to", List.of(Map.of("email", to)))));
