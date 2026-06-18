@@ -21,6 +21,12 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOriginPatterns(
                             "http://localhost:*",
+                            // ── APK Capacitor: la WebView sirve la app desde estos orígenes ──
+                            "https://localhost",        // Android (androidScheme=https, por defecto)
+                            "http://localhost",         // Android (androidScheme=http)
+                            "capacitor://localhost",    // iOS
+                            "ionic://localhost",         // compatibilidad
+                            // ── Web ──
                             "https://*.vercel.app",
                             "https://*.railway.app",
                             "https://*.netlify.app"
