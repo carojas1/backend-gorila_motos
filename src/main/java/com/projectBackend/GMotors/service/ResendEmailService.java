@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 import jakarta.mail.internet.MimeMessage;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -24,7 +25,10 @@ public class ResendEmailService {
     @Value("${resend.from-email:noreply@gorilamoto.com}")
     private String fromEmail;
 
-    /* ── SMTP (Gmail) — alternativa SIN dominio propio ── */
+    @Value("${sendgrid.api-key:}")
+    private String sendgridApiKey;
+
+    /* ── SMTP (Gmail) — bloqueado en Render free tier ── */
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
@@ -35,13 +39,42 @@ public class ResendEmailService {
     private String fromName;
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private static final String RESEND_URL = "https://api.resend.com/emails";
+    private static final String RESEND_URL     = "https://api.resend.com/emails";
+    private static final String SENDGRID_URL   = "https://api.sendgrid.com/v3/mail/send";
 
     /* ── Envío genérico ──
-       Prioridad: 1) Gmail SMTP si está configurado (no requiere dominio y
-       entrega a cualquier correo), 2) Resend como respaldo. */
+       Prioridad: 1) SendGrid (solo verifica email, sin dominio, HTTPS)
+                  2) Gmail SMTP (bloqueado en Render free tier)
+                  3) Resend (requiere dominio propio verificado) */
     private boolean enviar(String to, String subject, String html) {
-        /* 1) Gmail SMTP */
+
+        /* 1) SendGrid — HTTP API, no necesita dominio, funciona en Render */
+        if (sendgridApiKey != null && !sendgridApiKey.isBlank()) {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.setBearerAuth(sendgridApiKey);
+
+                String senderEmail = (mailUsername != null && !mailUsername.isBlank())
+                        ? mailUsername : "gorilamotos2026@gmail.com";
+
+                Map<String, Object> body = new HashMap<>();
+                body.put("personalizations", List.of(Map.of("to", List.of(Map.of("email", to)))));
+                body.put("from", Map.of("email", senderEmail, "name", fromName));
+                body.put("subject", subject);
+                body.put("content", List.of(Map.of("type", "text/html", "value", html)));
+
+                HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, headers);
+                ResponseEntity<String> res = restTemplate.postForEntity(SENDGRID_URL, req, String.class);
+                System.out.println("[EMAIL] (SendGrid) Enviado a " + to + " — status: " + res.getStatusCode());
+                return res.getStatusCode().is2xxSuccessful();
+            } catch (Exception e) {
+                System.err.println("[EMAIL] (SendGrid) Error a " + to + ": " + e.getMessage());
+                // cae al respaldo
+            }
+        }
+
+        /* 2) Gmail SMTP (funciona en local, bloqueado en Render free) */
         if (mailSender != null && mailUsername != null && !mailUsername.isBlank()) {
             try {
                 MimeMessage msg = mailSender.createMimeMessage();
@@ -49,40 +82,39 @@ public class ResendEmailService {
                 helper.setFrom(mailUsername, fromName);
                 helper.setTo(to);
                 helper.setSubject(subject);
-                helper.setText(html, true);   // true = HTML
+                helper.setText(html, true);
                 mailSender.send(msg);
                 System.out.println("[EMAIL] (SMTP/Gmail) Enviado a " + to);
                 return true;
             } catch (Exception e) {
-                System.err.println("[EMAIL] (SMTP) Error a " + to + ": " + e.getMessage() + " — intento con Resend si existe");
-                // cae al respaldo Resend
+                System.err.println("[EMAIL] (SMTP) Error a " + to + ": " + e.getMessage());
             }
         }
 
-        /* 2) Resend (requiere dominio verificado para terceros) */
-        if (resendApiKey == null || resendApiKey.isBlank()) {
-            System.out.println("[EMAIL] Sin SMTP ni Resend configurado — email no enviado a: " + to);
-            return false;
-        }
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(resendApiKey);
+        /* 3) Resend (requiere dominio verificado) */
+        if (resendApiKey != null && !resendApiKey.isBlank()) {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.setBearerAuth(resendApiKey);
 
-            Map<String, Object> body = new HashMap<>();
-            body.put("from", fromName + " <" + fromEmail + ">");
-            body.put("to", to);
-            body.put("subject", subject);
-            body.put("html", html);
+                Map<String, Object> body = new HashMap<>();
+                body.put("from", fromName + " <" + fromEmail + ">");
+                body.put("to", to);
+                body.put("subject", subject);
+                body.put("html", html);
 
-            HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, headers);
-            ResponseEntity<String> res = restTemplate.postForEntity(RESEND_URL, req, String.class);
-            System.out.println("[EMAIL] (Resend) Enviado a " + to + " — status: " + res.getStatusCode());
-            return res.getStatusCode().is2xxSuccessful();
-        } catch (Exception e) {
-            System.err.println("[EMAIL] Error al enviar a " + to + ": " + e.getMessage());
-            return false;
+                HttpEntity<Map<String, Object>> req = new HttpEntity<>(body, headers);
+                ResponseEntity<String> res = restTemplate.postForEntity(RESEND_URL, req, String.class);
+                System.out.println("[EMAIL] (Resend) Enviado a " + to + " — status: " + res.getStatusCode());
+                return res.getStatusCode().is2xxSuccessful();
+            } catch (Exception e) {
+                System.err.println("[EMAIL] (Resend) Error a " + to + ": " + e.getMessage());
+            }
         }
+
+        System.out.println("[EMAIL] Sin proveedor configurado — email no enviado a: " + to);
+        return false;
     }
 
     /* ══════════════════════════════════════════════
