@@ -63,6 +63,7 @@ public class SecurityConfig {
                 // Healthcheck de Render — DEBE ser público
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/health/email-test").permitAll()
                 .requestMatchers("/api/metrics/reports/**").permitAll()
                 .requestMatchers("/api/usuarios/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
