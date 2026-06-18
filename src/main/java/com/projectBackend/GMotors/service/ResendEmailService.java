@@ -275,13 +275,15 @@ public class ResendEmailService {
         String pvpStr   = String.format("$%.2f", pvp);
 
         return "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
-               "<meta name='viewport' content='width=device-width,initial-scale=1'></head>" +
+               "<meta name='viewport' content='width=device-width,initial-scale=1'>" +
+               "<style>@media only screen and (max-width:600px){.email-wrap{width:100%!important;border-radius:12px!important}.email-pad{padding:20px 16px!important}.email-h1{font-size:18px!important}.email-total{font-size:22px!important}}</style>" +
+               "</head>" +
                "<body style='margin:0;padding:0;background:#F0F2F5;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Arial,sans-serif'>" +
-               "<table width='100%' cellpadding='0' cellspacing='0'><tr><td align='center' style='padding:40px 16px'>" +
-               "<table width='580' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.12)'>" +
+               "<table width='100%' cellpadding='0' cellspacing='0'><tr><td align='center' style='padding:24px 8px'>" +
+               "<table class='email-wrap' width='580' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.12);max-width:580px;width:100%'>" +
 
                /* ── Header oscuro ── */
-               "<tr><td style='background:linear-gradient(135deg,#0C0C10 0%,#1A1A22 100%);padding:30px 40px'>" +
+               "<tr><td class='email-pad' style='background:linear-gradient(135deg,#0C0C10 0%,#1A1A22 100%);padding:24px 28px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;color:#ffffff;font-size:24px;font-weight:900;letter-spacing:-0.5px'>Gorila <span style='color:#E11428'>Motos</span></p>" +
                "<p style='margin:4px 0 0;color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:3px;text-transform:uppercase'>Sistema de gestión · Ecuador</p></td>" +
@@ -291,17 +293,17 @@ public class ResendEmailService {
                "</div></td></tr></table></td></tr>" +
 
                /* ── Saludo ── */
-               "<tr><td style='padding:32px 40px 0'>" +
-               "<h2 style='margin:0 0 6px;color:#111827;font-size:22px;font-weight:800'>¡Gracias por tu compra!</h2>" +
+               "<tr><td class='email-pad' style='padding:24px 28px 0'>" +
+               "<h2 class='email-h1' style='margin:0 0 6px;color:#111827;font-size:22px;font-weight:800'>¡Gracias por tu compra!</h2>" +
                "<p style='margin:0;color:#6B7280;font-size:14px'>Hola <strong style='color:#111827'>" + nombre + "</strong>, aquí está tu comprobante de venta.</p>" +
                "</td></tr>" +
 
                /* ── Línea divisora puntuada (recibo) ── */
-               "<tr><td style='padding:24px 40px'>" +
+               "<tr><td class='email-pad' style='padding:20px 28px'>" +
                "<div style='border-top:2px dashed #E5E7EB'></div></td></tr>" +
 
                /* ── Detalle del producto ── */
-               "<tr><td style='padding:0 40px'>" +
+               "<tr><td class='email-pad' style='padding:0 28px'>" +
                "<p style='margin:0 0 14px;color:#9CA3AF;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase'>Detalle de la compra</p>" +
                "<table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #F3F4F6'>" +
                "<thead><tr style='background:#F9FAFB'>" +
@@ -318,21 +320,21 @@ public class ResendEmailService {
                "</tr></tbody></table></td></tr>" +
 
                /* ── Total destacado ── */
-               "<tr><td style='padding:20px 40px'>" +
+               "<tr><td class='email-pad' style='padding:16px 28px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
-               "<td style='background:linear-gradient(135deg,#E11428,#B91C1C);border-radius:14px;padding:18px 24px'>" +
+               "<td style='background:linear-gradient(135deg,#E11428,#B91C1C);border-radius:14px;padding:16px 20px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;color:rgba(255,255,255,0.75);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px'>Total pagado</p>" +
-               "<p style='margin:4px 0 0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-1px'>" + totalStr + "</p></td>" +
-               "<td align='right'><p style='margin:0;color:rgba(255,255,255,0.5);font-size:11px'>" + fecha + "</p></td>" +
+               "<p class='email-total' style='margin:4px 0 0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-1px'>" + totalStr + "</p></td>" +
+               "<td align='right' style='white-space:nowrap'><p style='margin:0;color:rgba(255,255,255,0.5);font-size:11px'>" + fecha + "</p></td>" +
                "</tr></table></td></tr></table></td></tr>" +
 
                /* ── Línea divisora puntuada ── */
-               "<tr><td style='padding:0 40px 24px'>" +
+               "<tr><td class='email-pad' style='padding:0 28px 20px'>" +
                "<div style='border-top:2px dashed #E5E7EB'></div></td></tr>" +
 
                /* ── Nota informativa ── */
-               "<tr><td style='padding:0 40px 32px'>" +
+               "<tr><td class='email-pad' style='padding:0 28px 28px'>" +
                "<div style='background:#FEF9EC;border-left:3px solid #F59E0B;border-radius:0 10px 10px 0;padding:14px 16px'>" +
                "<p style='margin:0;color:#92400E;font-size:12px;line-height:1.6'>" +
                "<strong>Conserva este correo</strong> como comprobante de tu compra. " +
@@ -340,7 +342,7 @@ public class ResendEmailService {
                "</div></td></tr>" +
 
                /* ── Footer ── */
-               "<tr><td style='background:#F9FAFB;padding:20px 40px;border-top:1px solid #F3F4F6'>" +
+               "<tr><td class='email-pad' style='background:#F9FAFB;padding:16px 28px;border-top:1px solid #F3F4F6'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;color:#9CA3AF;font-size:11px'>© " + java.time.Year.now().getValue() +
                " Gorila Motos · Cuenca, Ecuador</p></td>" +
@@ -505,13 +507,15 @@ public class ResendEmailService {
         String enlace   = "https://gorila-motos.vercel.app" + (idRegistro != null ? "/invoice/" + idRegistro : "");
 
         return "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
-               "<meta name='viewport' content='width=device-width,initial-scale=1'></head>" +
+               "<meta name='viewport' content='width=device-width,initial-scale=1'>" +
+               "<style>@media only screen and (max-width:600px){.email-wrap{width:100%!important;border-radius:12px!important}.email-pad{padding:16px!important}.email-h1{font-size:18px!important}.email-total{font-size:22px!important}}</style>" +
+               "</head>" +
                "<body style='margin:0;padding:0;background:#F0F2F5;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Arial,sans-serif'>" +
-               "<table width='100%' cellpadding='0' cellspacing='0'><tr><td align='center' style='padding:40px 16px'>" +
-               "<table width='580' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.12)'>" +
+               "<table width='100%' cellpadding='0' cellspacing='0'><tr><td align='center' style='padding:24px 8px'>" +
+               "<table class='email-wrap' width='580' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.12);max-width:580px;width:100%'>" +
 
                // ── Header oscuro con logo + badge referencia ──
-               "<tr><td style='background:linear-gradient(135deg,#0C0C10 0%,#1A1A22 100%);padding:30px 40px'>" +
+               "<tr><td class='email-pad' style='background:linear-gradient(135deg,#0C0C10 0%,#1A1A22 100%);padding:24px 28px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;color:#ffffff;font-size:24px;font-weight:900;letter-spacing:-0.5px'>Gorila <span style='color:#E11428'>Motos</span></p>" +
                "<p style='margin:4px 0 0;color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:3px;text-transform:uppercase'>Sistema de gestión · Ecuador</p></td>" +
@@ -521,16 +525,16 @@ public class ResendEmailService {
                "</div></td></tr></table></td></tr>" +
 
                // ── Saludo ──
-               "<tr><td style='padding:32px 40px 0'>" +
-               "<h2 style='margin:0 0 6px;color:#111827;font-size:22px;font-weight:800'>¡Gracias por tu visita!</h2>" +
+               "<tr><td class='email-pad' style='padding:24px 28px 0'>" +
+               "<h2 class='email-h1' style='margin:0 0 6px;color:#111827;font-size:22px;font-weight:800'>¡Gracias por tu visita!</h2>" +
                "<p style='margin:0;color:#6B7280;font-size:14px'>Hola <strong style='color:#111827'>" + nombre + "</strong>, aquí está el resumen de tu servicio en Gorila Motos.</p>" +
                "</td></tr>" +
 
                // ── Línea divisora puntuada ──
-               "<tr><td style='padding:24px 40px'><div style='border-top:2px dashed #E5E7EB'></div></td></tr>" +
+               "<tr><td class='email-pad' style='padding:20px 28px'><div style='border-top:2px dashed #E5E7EB'></div></td></tr>" +
 
                // ── Tabla de detalles del servicio ──
-               "<tr><td style='padding:0 40px'>" +
+               "<tr><td class='email-pad' style='padding:0 28px'>" +
                "<p style='margin:0 0 14px;color:#9CA3AF;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase'>Detalle del servicio</p>" +
                "<table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;border:1px solid #F3F4F6;border-radius:12px;overflow:hidden'>" +
                "<tr style='background:#F9FAFB'>" +
@@ -546,25 +550,25 @@ public class ResendEmailService {
                "</table></td></tr>" +
 
                // ── Total destacado en rojo ──
-               "<tr><td style='padding:20px 40px'>" +
+               "<tr><td class='email-pad' style='padding:16px 28px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
-               "<td style='background:linear-gradient(135deg,#E11428,#B91C1C);border-radius:14px;padding:18px 24px'>" +
+               "<td style='background:linear-gradient(135deg,#E11428,#B91C1C);border-radius:14px;padding:16px 20px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;color:rgba(255,255,255,0.75);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px'>Total del servicio</p>" +
-               "<p style='margin:4px 0 0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-1px'>" + costoStr + "</p></td>" +
-               "<td align='right'><p style='margin:0;color:rgba(255,255,255,0.5);font-size:11px'>" + fecha + "</p></td>" +
+               "<p class='email-total' style='margin:4px 0 0;color:#fff;font-size:28px;font-weight:900;letter-spacing:-1px'>" + costoStr + "</p></td>" +
+               "<td align='right' style='white-space:nowrap'><p style='margin:0;color:rgba(255,255,255,0.5);font-size:11px'>" + fecha + "</p></td>" +
                "</tr></table></td></tr></table></td></tr>" +
 
                // ── Botón ver orden ──
-               "<tr><td style='padding:0 40px 28px'>" +
+               "<tr><td class='email-pad' style='padding:0 28px 24px'>" +
                "<a href='" + enlace + "' style='display:inline-block;background:linear-gradient(135deg,#E11428,#B91C1C);color:#fff;text-decoration:none;padding:13px 28px;border-radius:12px;font-weight:700;font-size:14px'>Ver orden de servicio →</a>" +
                "</td></tr>" +
 
                // ── Línea divisora puntuada ──
-               "<tr><td style='padding:0 40px 24px'><div style='border-top:2px dashed #E5E7EB'></div></td></tr>" +
+               "<tr><td class='email-pad' style='padding:0 28px 20px'><div style='border-top:2px dashed #E5E7EB'></div></td></tr>" +
 
                // ── Nota informativa ──
-               "<tr><td style='padding:0 40px 32px'>" +
+               "<tr><td class='email-pad' style='padding:0 28px 28px'>" +
                "<div style='background:#FEF9EC;border-left:3px solid #F59E0B;border-radius:0 10px 10px 0;padding:14px 16px'>" +
                "<p style='margin:0;color:#92400E;font-size:12px;line-height:1.6'>" +
                "<strong>Conserva este correo</strong> como comprobante de tu servicio. " +
@@ -572,7 +576,7 @@ public class ResendEmailService {
                "</div></td></tr>" +
 
                // ── Footer ──
-               "<tr><td style='background:#F9FAFB;padding:20px 40px;border-top:1px solid #F3F4F6'>" +
+               "<tr><td class='email-pad' style='background:#F9FAFB;padding:16px 28px;border-top:1px solid #F3F4F6'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;color:#9CA3AF;font-size:11px'>© " + java.time.Year.now().getValue() +
                " Gorila Motos · Cuenca, Ecuador</p></td>" +
