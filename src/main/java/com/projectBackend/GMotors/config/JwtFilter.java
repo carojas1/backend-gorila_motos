@@ -37,7 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // Rutas públicas — sin verificación de token
-        if (path.equals("/api/health") || path.equals("/api/health/email-test") ||
+        if (path.startsWith("/api/health") ||
         		path.startsWith("/images/") ||
         		path.startsWith("/api/metrics/reports/") ||
                 // Healthcheck de Render — crítico para que el servicio no se marque como caído
