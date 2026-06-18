@@ -76,35 +76,46 @@ public class AlertaMantenimientoService {
 
         List<ParametroMantenimiento> params = parametroRepo.findByCc(moto.getCilindraje());
 
+        // Recolectamos TODO lo pendiente (no avisado aún) y enviamos UN SOLO correo.
+        List<ResendEmailService.ItemMantenimiento> items = new ArrayList<>();
+        List<AlertaEnviada> pendientesGuardar = new ArrayList<>();
+
         for (ParametroMantenimiento p : params) {
             int    intervalo  = p.getIntervaloKm();
             int    umbral     = (kmActual / intervalo) * intervalo; // último múltiplo cruzado
 
             if (umbral == 0) continue; // moto nueva, aún no alcanzó primer intervalo
 
-            // ── Alerta de vencimiento (km cruzó múltiplo exacto) ──
+            // ── Vencido (km cruzó múltiplo exacto) ──
             String tipoVencido = p.getTipoMantenimiento() + "_VENCIDO";
             if (!alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoVencido, umbral)) {
-                emailService.enviarAlertaMantenimientoVencido(
-                    correo, nombre, moto.getPlaca(), moto.getMarca(), moto.getModelo(),
-                    p.getTipoMantenimiento(), p.getDescripcion(), umbral
-                );
-                alertaRepo.save(new AlertaEnviada(moto.getId_moto(), tipoVencido, umbral, LocalDateTime.now()));
+                items.add(new ResendEmailService.ItemMantenimiento(
+                    p.getTipoMantenimiento(), p.getDescripcion(), 0, true));
+                pendientesGuardar.add(new AlertaEnviada(moto.getId_moto(), tipoVencido, umbral, LocalDateTime.now()));
             }
 
-            // ── Alerta de aproximación (dentro del 30% del próximo intervalo) ──
+            // ── Próximo (dentro del 20% del siguiente intervalo) ──
             int nextUmbral = umbral + intervalo;
             int kmRestante = nextUmbral - kmActual;
             if (kmRestante <= (int)(intervalo * 0.20)) {
                 String tipoProximo = p.getTipoMantenimiento() + "_PROXIMO";
                 if (!alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoProximo, nextUmbral)) {
-                    emailService.enviarAlertaMantenimientoProximo(
-                        correo, nombre, moto.getPlaca(), moto.getMarca(), moto.getModelo(),
-                        p.getTipoMantenimiento(), p.getDescripcion(), kmRestante, nextUmbral
-                    );
-                    alertaRepo.save(new AlertaEnviada(moto.getId_moto(), tipoProximo, nextUmbral, LocalDateTime.now()));
+                    items.add(new ResendEmailService.ItemMantenimiento(
+                        p.getTipoMantenimiento(), p.getDescripcion(), kmRestante, false));
+                    pendientesGuardar.add(new AlertaEnviada(moto.getId_moto(), tipoProximo, nextUmbral, LocalDateTime.now()));
                 }
             }
         }
+
+        if (items.isEmpty()) return; // nada nuevo que avisar
+
+        // Vencidos primero en la lista (más urgentes arriba)
+        items.sort((a, b) -> Boolean.compare(b.vencido, a.vencido));
+
+        emailService.enviarResumenMantenimiento(
+            correo, nombre, moto.getPlaca(), moto.getMarca(), moto.getModelo(), kmActual, items);
+
+        // Marcamos como avisado para no reenviar el mismo umbral
+        for (AlertaEnviada a : pendientesGuardar) alertaRepo.save(a);
     }
 }

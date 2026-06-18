@@ -233,6 +233,85 @@ public class ResendEmailService {
         return enviar(correo, "Próximo: " + tipoLabel + " — " + placa + " · Gorila Motos", html);
     }
 
+    /* ══════════════════════════════════════════════
+       EMAIL 9 — RESUMEN de mantenimiento (UN SOLO correo con TODO)
+       Reemplaza el envío de un correo por cada componente para no saturar
+       la bandeja ni el límite del proveedor de correo.
+       ══════════════════════════════════════════════ */
+    /** Número de WhatsApp que recibe las citas (EN PRUEBA — cambiar al de Gorila Motos). */
+    private static final String WHATSAPP_CITAS = "593989443292";
+
+    public static class ItemMantenimiento {
+        public final String tipo;
+        public final String descripcion;
+        public final int    kmRestante;
+        public final boolean vencido;
+        public ItemMantenimiento(String tipo, String descripcion, int kmRestante, boolean vencido) {
+            this.tipo = tipo; this.descripcion = descripcion; this.kmRestante = kmRestante; this.vencido = vencido;
+        }
+    }
+
+    public boolean enviarResumenMantenimiento(String correo, String nombre, String placa,
+                                              String marca, String modelo, int kmActual,
+                                              java.util.List<ItemMantenimiento> items) {
+        if (correo == null || correo.isBlank() || correo.endsWith("@gmotors.local")) return false;
+        if (items == null || items.isEmpty()) return false;
+
+        long vencidos = items.stream().filter(i -> i.vencido).count();
+        long proximos = items.size() - vencidos;
+        String acento = vencidos > 0 ? "#E11428" : "#F59E0B";
+
+        StringBuilder filas = new StringBuilder();
+        for (ItemMantenimiento it : items) {
+            String label  = tipoLabel(it.tipo);
+            String color  = it.vencido ? "#E11428" : "#F59E0B";
+            String bg     = it.vencido ? "rgba(225,20,40,0.08)" : "rgba(245,158,11,0.08)";
+            String estado = it.vencido
+                ? "Cambiar ya"
+                : "Próximo · faltan " + String.format("%,d", it.kmRestante) + " km";
+            filas.append("<tr>")
+                 .append("<td style='padding:11px 12px;border-bottom:1px solid #f3f3f3;font-size:13px;color:#111;font-weight:600'>")
+                 .append(label)
+                 .append(it.descripcion != null && !it.descripcion.isBlank()
+                     ? "<br><span style='font-size:11px;color:#9CA3AF;font-weight:400'>" + it.descripcion + "</span>" : "")
+                 .append("</td><td style='padding:11px 12px;border-bottom:1px solid #f3f3f3'>")
+                 .append("<span style='font-size:11px;font-weight:700;color:").append(color)
+                 .append(";background:").append(bg).append(";padding:4px 10px;border-radius:6px;white-space:nowrap'>")
+                 .append(estado).append("</span></td></tr>");
+        }
+
+        String resumen = vencidos > 0
+            ? vencidos + " por cambiar" + (proximos > 0 ? " y " + proximos + " por vencer." : ".")
+            : proximos + " mantenimiento(s) próximos a vencer.";
+
+        String cuerpo =
+            "Hola <strong>" + nombre + "</strong>, tu moto <strong>" + marca + " " + modelo +
+            "</strong> (placa <strong>" + placa + "</strong>) con <strong>" + String.format("%,d", kmActual) +
+            " km</strong> necesita atención:<br><br>" +
+            "<span style='color:" + acento + ";font-weight:800;font-size:15px'>" + resumen + "</span>" +
+            "<table style='width:100%;border-collapse:collapse;margin:12px 0 4px'>" +
+            "<tr><th style='text-align:left;padding:8px 12px;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Componente</th>" +
+            "<th style='text-align:left;padding:8px 12px;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Estado</th></tr>" +
+            filas + "</table>";
+
+        // Botón "Agendar cita" → WhatsApp con mensaje prellenado
+        String waMsg = java.net.URLEncoder.encode(
+            "¡Hola Gorila Motos! Quiero agendar una cita para mi moto " + marca + " " + modelo +
+            " (placa " + placa + "). Kilometraje: " + String.format("%,d", kmActual) + " km.",
+            java.nio.charset.StandardCharsets.UTF_8);
+        String waLink = "https://wa.me/" + WHATSAPP_CITAS + "?text=" + waMsg;
+
+        String html = htmlBase(
+            (vencidos > 0 ? "⚠️ " : "") + "Tu moto necesita mantenimiento",
+            cuerpo,
+            "Agendar cita por WhatsApp",
+            waLink,
+            "Agenda tu cita pronto para evitar daños mayores y costos más altos. — Gorila Motos"
+        );
+        String asunto = (vencidos > 0 ? "⚠️ " : "") + "Mantenimiento de tu moto " + placa + " — Gorila Motos";
+        return enviar(correo, asunto, html);
+    }
+
     private String tipoLabel(String tipo) {
         return switch (tipo) {
             case "ACEITE"           -> "Cambio de aceite";
