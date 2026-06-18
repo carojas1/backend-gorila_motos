@@ -60,10 +60,9 @@ public class SecurityConfig {
                 // ============================
                 //   RUTAS PÚBLICAS (SIN TOKEN)
                 // ============================
-                // Healthcheck de Render — DEBE ser público
+                // Healthcheck de Render / UptimeRobot — CUALQUIER método (GET, HEAD, OPTIONS)
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/health/email-test").permitAll()
+                .requestMatchers("/api/health", "/api/health/**").permitAll()
                 .requestMatchers("/api/metrics/reports/**").permitAll()
                 .requestMatchers("/api/usuarios/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
