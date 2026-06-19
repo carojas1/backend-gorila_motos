@@ -244,54 +244,79 @@ public class ResendEmailService {
     public static class ItemMantenimiento {
         public final String tipo;
         public final String descripcion;
+        public final int    porcentaje;   // desgaste 0-100+
         public final int    kmRestante;
-        public final boolean vencido;
-        public ItemMantenimiento(String tipo, String descripcion, int kmRestante, boolean vencido) {
-            this.tipo = tipo; this.descripcion = descripcion; this.kmRestante = kmRestante; this.vencido = vencido;
+        public final String estado;       // "VENCIDO" | "PROXIMO" | "OK"
+        public ItemMantenimiento(String tipo, String descripcion, int porcentaje, int kmRestante, String estado) {
+            this.tipo = tipo; this.descripcion = descripcion; this.porcentaje = porcentaje;
+            this.kmRestante = kmRestante; this.estado = estado;
         }
     }
 
+    /**
+     * UN solo correo con el DETALLE TÉCNICO COMPLETO: cada componente con su % de
+     * desgaste y su estado. Lo urgente arriba, el resto como referencia.
+     * @param items TODOS los componentes (no solo los que se pasaron).
+     */
     public boolean enviarResumenMantenimiento(String correo, String nombre, String placa,
                                               String marca, String modelo, int kmActual,
                                               java.util.List<ItemMantenimiento> items) {
         if (correo == null || correo.isBlank() || correo.endsWith("@gmotors.local")) return false;
         if (items == null || items.isEmpty()) return false;
 
-        long vencidos = items.stream().filter(i -> i.vencido).count();
-        long proximos = items.size() - vencidos;
-        String acento = vencidos > 0 ? "#E11428" : "#F59E0B";
+        // Ordenar por desgaste descendente (lo más crítico primero)
+        items = new java.util.ArrayList<>(items);
+        items.sort((a, b) -> Integer.compare(b.porcentaje, a.porcentaje));
+
+        long vencidos = items.stream().filter(i -> "VENCIDO".equals(i.estado)).count();
+        long proximos = items.stream().filter(i -> "PROXIMO".equals(i.estado)).count();
+        String acento = vencidos > 0 ? "#E11428" : (proximos > 0 ? "#F59E0B" : "#10B981");
 
         StringBuilder filas = new StringBuilder();
         for (ItemMantenimiento it : items) {
-            String label  = tipoLabel(it.tipo);
-            String color  = it.vencido ? "#E11428" : "#F59E0B";
-            String bg     = it.vencido ? "rgba(225,20,40,0.08)" : "rgba(245,158,11,0.08)";
-            String estado = it.vencido
-                ? "Cambiar ya"
-                : "Próximo · faltan " + String.format("%,d", it.kmRestante) + " km";
+            boolean ven = "VENCIDO".equals(it.estado);
+            boolean pro = "PROXIMO".equals(it.estado);
+            String color = ven ? "#E11428" : pro ? "#F59E0B" : "#10B981";
+            String estadoTxt = ven ? "CAMBIAR YA" : pro ? "PRÓXIMO" : "AL DÍA";
+            int pct = Math.min(100, Math.max(0, it.porcentaje));
+            String detalle = ven
+                ? "Excedido"
+                : "Faltan " + String.format("%,d", Math.max(0, it.kmRestante)) + " km";
             filas.append("<tr>")
-                 .append("<td style='padding:11px 12px;border-bottom:1px solid #f3f3f3;font-size:13px;color:#111;font-weight:600'>")
-                 .append(label)
-                 .append(it.descripcion != null && !it.descripcion.isBlank()
-                     ? "<br><span style='font-size:11px;color:#9CA3AF;font-weight:400'>" + it.descripcion + "</span>" : "")
-                 .append("</td><td style='padding:11px 12px;border-bottom:1px solid #f3f3f3'>")
-                 .append("<span style='font-size:11px;font-weight:700;color:").append(color)
-                 .append(";background:").append(bg).append(";padding:4px 10px;border-radius:6px;white-space:nowrap'>")
-                 .append(estado).append("</span></td></tr>");
+                 // Componente
+                 .append("<td style='padding:12px;border-bottom:1px solid #f3f3f3;font-size:13px;color:#111;font-weight:600;vertical-align:top'>")
+                 .append(tipoLabel(it.tipo))
+                 .append("<br><span style='font-size:10.5px;color:#9CA3AF;font-weight:400'>").append(detalle).append("</span>")
+                 .append("</td>")
+                 // Barra de % desgaste
+                 .append("<td style='padding:12px;border-bottom:1px solid #f3f3f3;vertical-align:middle;width:46%'>")
+                 .append("<table cellpadding='0' cellspacing='0' style='width:100%'><tr>")
+                 .append("<td style='background:#EEF1F4;border-radius:99px;height:8px;padding:0'>")
+                 .append("<table cellpadding='0' cellspacing='0' style='width:").append(pct).append("%;min-width:8px'><tr>")
+                 .append("<td style='background:").append(color).append(";border-radius:99px;height:8px;font-size:1px;line-height:1px'>&nbsp;</td>")
+                 .append("</tr></table></td>")
+                 .append("<td style='padding-left:10px;width:38px;text-align:right;font-size:12px;font-weight:800;color:").append(color).append("'>").append(it.porcentaje).append("%</td>")
+                 .append("</tr></table></td>")
+                 // Estado
+                 .append("<td style='padding:12px;border-bottom:1px solid #f3f3f3;text-align:right'>")
+                 .append("<span style='font-size:10px;font-weight:800;color:").append(color)
+                 .append(";background:").append(color).append("14;padding:4px 9px;border-radius:6px;white-space:nowrap'>")
+                 .append(estadoTxt).append("</span></td></tr>");
         }
 
         String resumen = vencidos > 0
-            ? vencidos + " por cambiar" + (proximos > 0 ? " y " + proximos + " por vencer." : ".")
-            : proximos + " mantenimiento(s) próximos a vencer.";
+            ? vencidos + " componente(s) por cambiar" + (proximos > 0 ? " y " + proximos + " por vencer." : ".")
+            : (proximos > 0 ? proximos + " componente(s) próximos a vencer." : "Todo en orden.");
 
         String cuerpo =
-            "Hola <strong>" + nombre + "</strong>, tu moto <strong>" + marca + " " + modelo +
+            "Hola <strong>" + nombre + "</strong>, este es el estado técnico de tu moto <strong>" + marca + " " + modelo +
             "</strong> (placa <strong>" + placa + "</strong>) con <strong>" + String.format("%,d", kmActual) +
-            " km</strong> necesita atención:<br><br>" +
+            " km</strong>:<br><br>" +
             "<span style='color:" + acento + ";font-weight:800;font-size:15px'>" + resumen + "</span>" +
             "<table style='width:100%;border-collapse:collapse;margin:12px 0 4px'>" +
-            "<tr><th style='text-align:left;padding:8px 12px;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Componente</th>" +
-            "<th style='text-align:left;padding:8px 12px;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Estado</th></tr>" +
+            "<tr><th style='text-align:left;padding:8px 12px;font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Componente</th>" +
+            "<th style='text-align:left;padding:8px 12px;font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Desgaste</th>" +
+            "<th style='text-align:right;padding:8px 12px;font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Estado</th></tr>" +
             filas + "</table>";
 
         // Botón "Agendar cita" → WhatsApp con mensaje prellenado

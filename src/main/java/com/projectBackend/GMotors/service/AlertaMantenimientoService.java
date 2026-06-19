@@ -76,44 +76,43 @@ public class AlertaMantenimientoService {
 
         List<ParametroMantenimiento> params = parametroRepo.findByCc(moto.getCilindraje());
 
-        // Recolectamos TODO lo pendiente (no avisado aún) y enviamos UN SOLO correo.
-        List<ResendEmailService.ItemMantenimiento> items = new ArrayList<>();
+        // Detectamos si hay ALGO NUEVO que cruzó umbral (para decidir si enviar).
+        // El antirrebote por (moto, tipo, km_umbral) evita reenviar el mismo umbral
+        // aunque el usuario suba/baje el kilometraje (no se gasta el cupo de correos).
         List<AlertaEnviada> pendientesGuardar = new ArrayList<>();
 
         for (ParametroMantenimiento p : params) {
-            int    intervalo  = p.getIntervaloKm();
-            int    umbral     = (kmActual / intervalo) * intervalo; // último múltiplo cruzado
+            int intervalo = p.getIntervaloKm();
+            int umbral    = (kmActual / intervalo) * intervalo;
+            if (umbral == 0) continue;
 
-            if (umbral == 0) continue; // moto nueva, aún no alcanzó primer intervalo
-
-            // ── Vencido (km cruzó múltiplo exacto) ──
             String tipoVencido = p.getTipoMantenimiento() + "_VENCIDO";
             if (!alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoVencido, umbral)) {
-                items.add(new ResendEmailService.ItemMantenimiento(
-                    p.getTipoMantenimiento(), p.getDescripcion(), 0, true));
                 pendientesGuardar.add(new AlertaEnviada(moto.getId_moto(), tipoVencido, umbral, LocalDateTime.now()));
             }
 
-            // ── Próximo (dentro del 20% del siguiente intervalo) ──
             int nextUmbral = umbral + intervalo;
             int kmRestante = nextUmbral - kmActual;
             if (kmRestante <= (int)(intervalo * 0.20)) {
                 String tipoProximo = p.getTipoMantenimiento() + "_PROXIMO";
                 if (!alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoProximo, nextUmbral)) {
-                    items.add(new ResendEmailService.ItemMantenimiento(
-                        p.getTipoMantenimiento(), p.getDescripcion(), kmRestante, false));
                     pendientesGuardar.add(new AlertaEnviada(moto.getId_moto(), tipoProximo, nextUmbral, LocalDateTime.now()));
                 }
             }
         }
 
-        if (items.isEmpty()) return; // nada nuevo que avisar
+        if (pendientesGuardar.isEmpty()) return; // nada nuevo cruzó umbral
 
-        // Vencidos primero en la lista (más urgentes arriba)
-        items.sort((a, b) -> Boolean.compare(b.vencido, a.vencido));
+        // UN SOLO correo con el DETALLE TÉCNICO COMPLETO: todos los componentes con su %.
+        List<EstadoMantenimiento> full = calcularEstado(moto);
+        List<ResendEmailService.ItemMantenimiento> todos = new ArrayList<>();
+        for (EstadoMantenimiento e : full) {
+            todos.add(new ResendEmailService.ItemMantenimiento(
+                e.tipo, e.descripcion, e.porcentajeDesgaste, e.kmRestante, e.estado));
+        }
 
         emailService.enviarResumenMantenimiento(
-            correo, nombre, moto.getPlaca(), moto.getMarca(), moto.getModelo(), kmActual, items);
+            correo, nombre, moto.getPlaca(), moto.getMarca(), moto.getModelo(), kmActual, todos);
 
         // Marcamos como avisado para no reenviar el mismo umbral
         for (AlertaEnviada a : pendientesGuardar) alertaRepo.save(a);
