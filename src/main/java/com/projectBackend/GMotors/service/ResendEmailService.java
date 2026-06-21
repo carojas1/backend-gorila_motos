@@ -577,6 +577,56 @@ public class ResendEmailService {
     }
 
     /* ══════════════════════════════════════════════
+       EMAIL 10 — Oferta / campaña de marketing masiva
+       Enviada por el ADMIN desde la pantalla de Clientes
+       ══════════════════════════════════════════════ */
+    public boolean enviarOfertaMarketing(String correo, String asunto, String mensajeHtml) {
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='" +
+            "margin:0;padding:0;background:#F4F4F5;font-family:Arial,sans-serif'>" +
+            "<table width='100%' cellpadding='0' cellspacing='0'><tr><td align='center' style='padding:40px 16px'>" +
+            "<table width='560' cellpadding='0' cellspacing='0' style='background:#fff;border-radius:16px;" +
+            "overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)'>" +
+            // Banda roja
+            "<tr><td style='background:#E11428;height:5px;font-size:1px'>&nbsp;</td></tr>" +
+            // Header
+            "<tr><td style='background:#0C0C10;padding:24px 36px'>" +
+            "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
+            "<td><p style='margin:0;color:#fff;font-size:22px;font-weight:900;letter-spacing:-0.5px'>" +
+            "Gorila <span style='color:#E11428'>Motos</span></p>" +
+            "<p style='margin:4px 0 0;color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:2px;text-transform:uppercase'>Taller Mecánico · Cuenca, Ecuador</p>" +
+            "</td>" +
+            "<td align='right'><span style='background:rgba(225,20,40,0.15);color:#E11428;font-size:9px;font-weight:800;" +
+            "letter-spacing:2px;text-transform:uppercase;padding:6px 12px;border-radius:8px;border:1px solid rgba(225,20,40,0.3)'>Oferta exclusiva</span></td>" +
+            "</tr></table></td></tr>" +
+            // Título
+            "<tr><td style='padding:32px 36px 8px'>" +
+            "<h2 style='margin:0 0 16px;color:#111;font-size:22px;font-weight:900;letter-spacing:-0.3px'>" + asunto + "</h2>" +
+            "</td></tr>" +
+            // Contenido del mensaje
+            "<tr><td style='padding:0 36px 28px'>" +
+            "<div style='color:#444;font-size:15px;line-height:1.7'>" + mensajeHtml + "</div>" +
+            "</td></tr>" +
+            // CTA
+            "<tr><td style='padding:0 36px 32px'>" +
+            "<a href='https://gorila-motos.vercel.app' style='display:inline-block;background:#E11428;color:#fff;" +
+            "text-decoration:none;padding:13px 28px;border-radius:10px;font-weight:700;font-size:14px'>Ver portal Gorila Motos →</a>" +
+            "</td></tr>" +
+            // Divider
+            "<tr><td style='height:1px;background:#F0F0F2'></td></tr>" +
+            // Footer
+            "<tr><td style='background:#F9F9FB;padding:20px 36px'>" +
+            "<p style='margin:0;color:#aaa;font-size:11px'>© " + java.time.Year.now().getValue() +
+            " Gorila Motos · Cuenca, Ecuador · " +
+            "<a href='https://gorila-motos.vercel.app' style='color:#E11428;text-decoration:none'>gorila-motos.vercel.app</a></p>" +
+            "<p style='margin:6px 0 0;color:#ccc;font-size:10px'>Para dejar de recibir estas comunicaciones, escríbenos a " +
+            "<a href='mailto:gorilamotos2026@gmail.com' style='color:#E11428'>gorilamotos2026@gmail.com</a></p>" +
+            "</td></tr>" +
+            "<tr><td style='background:#E11428;height:4px;font-size:1px'>&nbsp;</td></tr>" +
+            "</table></td></tr></table></body></html>";
+        return enviar(correo, asunto + " — Gorila Motos", html);
+    }
+
+    /* ══════════════════════════════════════════════
        EMAIL TEST — Diagnóstico de SMTP (endpoint público /api/health/email-test)
        ══════════════════════════════════════════════ */
     public boolean enviarEmailPrueba(String destino) {
