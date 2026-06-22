@@ -34,19 +34,10 @@ public class RoleValidationService {
      * Verifica si el usuario tiene rol ADMIN activo
      */
     public boolean esAdmin(Long userId) {
+        if (userId == null) return false;
         List<UsuarioRol> roles = usuarioRolRepository.findByIdUsuarioAndEstado(userId, 1);
-        
-        // 🔍 DEBUG TEMPORAL
-        System.out.println("🔍 Verificando admin para usuario: " + userId);
-        System.out.println("   Roles activos encontrados: " + roles.size());
-        roles.forEach(ur -> System.out.println("   - Rol ID: " + ur.getIdRol()));
-        
-        boolean resultado = roles.stream()
-            .anyMatch(ur -> ur.getIdRol() == ROL_ADMIN);
-        
-        System.out.println("   ¿Es Admin?: " + resultado);
-        
-        return resultado;
+        return roles.stream()
+            .anyMatch(ur -> ur.getIdRol() != null && ur.getIdRol() == ROL_ADMIN);
     }
     
     /**
