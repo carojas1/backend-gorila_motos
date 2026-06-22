@@ -102,9 +102,10 @@ public class UsuarioRolService {
 	}
 
 	/**
-	 * CAMBIAR CATEGORÍA - Promoción formal (Cliente → Mecánico, Mecánico → Admin)
-	 * Desactiva todos los roles actuales y activa/crea el nuevo.
-	 * Usa soft-update para evitar conflictos JPA con deleteAll + save.
+	 * CAMBIAR CATEGORÍA - El admin asigna el rol que decida a cualquier usuario.
+	 * Desactiva todos los roles actuales y activa/crea el nuevo (un solo rol activo).
+	 * Robusto: funciona aunque el usuario no tenga roles (sin-rol) o ya tenga el
+	 * mismo rol (idempotente). No bloquea ninguna transición — el admin manda.
 	 */
 	@Transactional
 	public void cambiarCategoria(Long usuarioId, Integer nuevoRolId, Long adminId) {
@@ -117,31 +118,29 @@ public class UsuarioRolService {
 			throw new IllegalArgumentException("No puedes cambiar tu propia categoría");
 		}
 
-		// 3. OBTENER TODOS LOS ROLES ACTUALES
+		// 3. VALIDAR ENTRADA
+		if (nuevoRolId == null) {
+			throw new IllegalArgumentException("Debes indicar el nuevo rol");
+		}
+
+		// 4. OBTENER TODOS LOS ROLES ACTUALES (puede estar vacío: usuario sin rol)
 		List<UsuarioRol> rolesActuales = usuarioRolRepository.findByIdUsuario(usuarioId);
 
-		if (rolesActuales.isEmpty()) {
-			throw new IllegalStateException("Usuario sin roles");
+		// 5. PRESERVAR FECHA DE INGRESO (o hoy si es nuevo)
+		LocalDate fechaIngreso = rolesActuales.isEmpty()
+				? LocalDate.now()
+				: validationService.obtenerFechaIngresoSistema(usuarioId);
+
+		// 6. DESACTIVAR TODOS LOS ROLES ACTUALES (soft-delete: estado=0)
+		if (!rolesActuales.isEmpty()) {
+			rolesActuales.forEach(r -> {
+				r.setEstado(0);
+				r.setFechaModificacion(LocalDate.now());
+			});
+			usuarioRolRepository.saveAll(rolesActuales);
 		}
 
-		// 4. PRESERVAR FECHA MÁS ANTIGUA
-		LocalDate fechaIngreso = validationService.obtenerFechaIngresoSistema(usuarioId);
-
-		// 5. VALIDAR QUE ES UN CAMBIO VÁLIDO
-		List<UsuarioRol> rolesActivos = rolesActuales.stream().filter(r -> r.getEstado() == 1).toList();
-		if (!rolesActivos.isEmpty()) {
-			Integer categoriaActual = rolesActivos.get(0).getIdRol();
-			validationService.validarCambioCategoria(categoriaActual, nuevoRolId);
-		}
-
-		// 6. DESACTIVAR TODOS LOS ROLES (soft-delete: estado=0)
-		rolesActuales.forEach(r -> {
-			r.setEstado(0);
-			r.setFechaModificacion(LocalDate.now());
-		});
-		usuarioRolRepository.saveAll(rolesActuales);
-
-		// 7. ACTIVAR O CREAR EL NUEVO ROL
+		// 7. ACTIVAR O CREAR EL NUEVO ROL (admin decide — sin restricciones de transición)
 		rolesActuales.stream()
 			.filter(r -> r.getIdRol().equals(nuevoRolId))
 			.findFirst()
