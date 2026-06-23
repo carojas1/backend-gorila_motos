@@ -22,6 +22,46 @@ public class OfertaController {
      * roles: 1=ADMIN, 2=CLIENTE, 3=MECANICO (pueden combinarse)
      * Solo accesible para ADMIN (el frontend ya lo restringe).
      */
+    /**
+     * POST /api/ofertas/enviar-emails
+     * Body: { asunto, mensaje, correos: ["a@b.com", ...] }
+     * Envía a una lista explícita de correos (para filtros por cilindraje, etc.)
+     */
+    @PostMapping("/enviar-emails")
+    public ResponseEntity<Map<String, Object>> enviarAEmails(@RequestBody Map<String, Object> req) {
+        String asunto  = (String) req.get("asunto");
+        String mensaje = (String) req.get("mensaje");
+
+        @SuppressWarnings("unchecked")
+        List<String> correos = req.get("correos") instanceof List<?>
+            ? ((List<?>) req.get("correos")).stream()
+                  .filter(o -> o instanceof String)
+                  .map(o -> (String) o)
+                  .toList()
+            : List.of();
+
+        if (asunto == null || asunto.isBlank() || mensaje == null || mensaje.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "exito", false, "mensaje", "Asunto y mensaje son obligatorios"
+            ));
+        }
+        if (correos.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "exito", false, "mensaje", "No hay destinatarios"
+            ));
+        }
+
+        OfertaService.OfertaResultado resultado = ofertaService.enviarOfertaAEmails(asunto, mensaje, correos);
+
+        return ResponseEntity.ok(Map.of(
+            "exito",    true,
+            "total",    resultado.total(),
+            "enviados", resultado.enviados(),
+            "errores",  resultado.errores(),
+            "mensaje",  resultado.enviados() + " de " + resultado.total() + " correos enviados"
+        ));
+    }
+
     @PostMapping("/enviar")
     public ResponseEntity<Map<String, Object>> enviar(@RequestBody Map<String, Object> req) {
         String asunto  = (String) req.get("asunto");

@@ -56,5 +56,28 @@ public class OfertaService {
         return new OfertaResultado(destinatarios.size(), enviados.get(), errores.get());
     }
 
+    public OfertaResultado enviarOfertaAEmails(String asunto, String mensaje, List<String> correos) {
+        AtomicInteger enviados = new AtomicInteger(0);
+        AtomicInteger errores  = new AtomicInteger(0);
+
+        List<String> destinos = correos.stream()
+            .filter(c -> c != null && !c.isBlank() && !c.endsWith("@gmotors.local"))
+            .distinct()
+            .toList();
+
+        for (String correo : destinos) {
+            try {
+                boolean ok = resendEmailService.enviarOfertaMarketing(correo, asunto, mensaje);
+                if (ok) enviados.incrementAndGet();
+                else    errores.incrementAndGet();
+            } catch (Exception e) {
+                System.err.println("[OFERTA] Error enviando a " + correo + ": " + e.getMessage());
+                errores.incrementAndGet();
+            }
+        }
+
+        return new OfertaResultado(destinos.size(), enviados.get(), errores.get());
+    }
+
     public record OfertaResultado(int total, int enviados, int errores) {}
 }
