@@ -97,6 +97,7 @@ public class RoleValidationService {
 
         return roles.stream()
             .map(UsuarioRol::getFechaCreacion)
+            .filter(java.util.Objects::nonNull)
             .min(Comparator.naturalOrder())
             .orElse(LocalDate.now());
     }

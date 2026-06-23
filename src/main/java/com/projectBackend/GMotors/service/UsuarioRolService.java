@@ -126,34 +126,42 @@ public class UsuarioRolService {
 		// 4. OBTENER TODOS LOS ROLES ACTUALES (puede estar vacío: usuario sin rol)
 		List<UsuarioRol> rolesActuales = usuarioRolRepository.findByIdUsuario(usuarioId);
 
-		// 5. PRESERVAR FECHA DE INGRESO (o hoy si es nuevo)
-		LocalDate fechaIngreso = rolesActuales.isEmpty()
-				? LocalDate.now()
-				: validationService.obtenerFechaIngresoSistema(usuarioId);
+		final LocalDate hoy = LocalDate.now();
 
-		// 6. DESACTIVAR TODOS LOS ROLES ACTUALES (soft-delete: estado=0)
+		// 5. PRESERVAR FECHA DE INGRESO — 100% a prueba de nulos.
+		//    Si algún rol tiene fecha_creacion null (datos viejos), se ignora
+		//    para no provocar NullPointerException → evita el error 500.
+		LocalDate fechaIngreso = rolesActuales.stream()
+				.map(UsuarioRol::getFechaCreacion)
+				.filter(java.util.Objects::nonNull)
+				.min(java.util.Comparator.naturalOrder())
+				.orElse(hoy);
+
+		// 6. DESACTIVAR TODOS LOS ROLES ACTUALES (soft-delete: estado=0).
+		//    Garantiza fecha_creacion no nula para no violar la restricción NOT NULL.
 		if (!rolesActuales.isEmpty()) {
 			rolesActuales.forEach(r -> {
 				r.setEstado(0);
-				r.setFechaModificacion(LocalDate.now());
+				if (r.getFechaCreacion() == null) r.setFechaCreacion(fechaIngreso);
+				r.setFechaModificacion(hoy);
 			});
 			usuarioRolRepository.saveAll(rolesActuales);
 		}
 
 		// 7. ACTIVAR O CREAR EL NUEVO ROL (admin decide — sin restricciones de transición)
 		rolesActuales.stream()
-			.filter(r -> r.getIdRol().equals(nuevoRolId))
+			.filter(r -> r.getIdRol() != null && r.getIdRol().equals(nuevoRolId))
 			.findFirst()
 			.ifPresentOrElse(existente -> {
 				existente.setEstado(1);
 				existente.setFechaCreacion(fechaIngreso);
-				existente.setFechaModificacion(LocalDate.now());
+				existente.setFechaModificacion(hoy);
 				usuarioRolRepository.save(existente);
 			}, () -> {
 				UsuarioRol nuevo = new UsuarioRol(usuarioId, nuevoRolId);
 				nuevo.setFechaCreacion(fechaIngreso);
 				nuevo.setEstado(1);
-				nuevo.setFechaModificacion(LocalDate.now());
+				nuevo.setFechaModificacion(hoy);
 				usuarioRolRepository.save(nuevo);
 			});
 	}
