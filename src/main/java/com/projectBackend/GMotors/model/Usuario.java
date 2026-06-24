@@ -22,6 +22,10 @@ public class Usuario {
     private String pais;
     private String ciudad;
     private String descripcion;
+    @Column(length = 20)
+    private String telefono;
+    @Column(length = 300)
+    private String direccion;
     @JsonProperty("ruta_imagen")
     private String ruta_imagen;    
     
@@ -102,6 +106,12 @@ public class Usuario {
 
 	public String getRutaimagen() {return ruta_imagen;	}
 	public void setRutaimagen(String rutaimagen) {this.ruta_imagen = rutaimagen;}
+
+	public String getTelefono() { return telefono; }
+	public void setTelefono(String telefono) { this.telefono = telefono; }
+
+	public String getDireccion() { return direccion; }
+	public void setDireccion(String direccion) { this.direccion = direccion; }
 	
 	
 	public List<UsuarioRol> getRoles() {

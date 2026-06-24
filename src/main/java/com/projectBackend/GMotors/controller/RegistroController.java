@@ -4,8 +4,10 @@ import com.projectBackend.GMotors.dto.RegistroCreateDTO;
 import com.projectBackend.GMotors.dto.RegistroListadoDTO;
 import com.projectBackend.GMotors.dto.DetalleFacturaDTO;
 import com.projectBackend.GMotors.dto.DetalleFacturaCreateDTO;
+import com.projectBackend.GMotors.model.DetalleFactura;
 import com.projectBackend.GMotors.model.Registro;
 import com.projectBackend.GMotors.model.Usuario;
+import com.projectBackend.GMotors.repository.DetalleFacturaRepository;
 import com.projectBackend.GMotors.repository.RegistroRepository;
 import com.projectBackend.GMotors.model.Factura;
 import com.projectBackend.GMotors.service.RegistroService;
@@ -41,6 +43,9 @@ public class RegistroController {
 
 	@Autowired
 	private RegistroRepository registroRepository;
+
+	@Autowired
+	private DetalleFacturaRepository detalleFacturaRepository;
 	
 
 	public RegistroController(RegistroService registroService) {
@@ -105,7 +110,8 @@ public class RegistroController {
 					String tipoServ = registro.getTipo()  != null ? registro.getTipo().getNombre()  : "Servicio de taller";
 					double total    = factura.getCostoTotal() != null ? factura.getCostoTotal().doubleValue() : 0.0;
 					String fecha    = factura.getFechaEmision() != null ? factura.getFechaEmision().toString() : "";
-					emailService.enviarFactura(correo, cliente.getNombre_completo(), placa, tipoServ, total, fecha, idRegistro);
+					List<DetalleFactura> dets = detalleFacturaRepository.findByIdFactura(factura.getIdFactura());
+					emailService.enviarFactura(correo, cliente.getNombre_completo(), placa, tipoServ, total, fecha, idRegistro, dets);
 					System.out.println("[RegistroController] Factura enviada por correo a " + correo);
 				}
 			} catch (Exception mailEx) {
@@ -159,10 +165,13 @@ public class RegistroController {
 						String  fecha   = reg.getFecha() != null ? reg.getFecha().toString() : "—";
 						String  placa   = reg.getMoto() != null ? reg.getMoto().getPlaca() : "—";
 
+						List<DetalleFactura> dets2 = reg.getFactura() != null
+							? detalleFacturaRepository.findByIdFactura(reg.getFactura().getIdFactura())
+							: java.util.Collections.emptyList();
 						emailService.enviarFactura(
 							cliente.getCorreo(),
 							cliente.getNombre_completo(),
-							placa, tipo, costo, fecha, id
+							placa, tipo, costo, fecha, id, dets2
 						);
 					}
 				} catch (Exception emailEx) {

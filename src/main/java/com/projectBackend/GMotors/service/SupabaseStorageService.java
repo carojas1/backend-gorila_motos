@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 import okhttp3.*;
 import java.io.IOException;
 import java.util.UUID;
+import okhttp3.MediaType;
 
 @Service
 public class SupabaseStorageService {
@@ -49,11 +50,12 @@ public class SupabaseStorageService {
                     supabaseUrl, bucketName, ruta
             );
 
+            String contentType = (file.getContentType() != null && !file.getContentType().isBlank())
+                    ? file.getContentType() : "application/octet-stream";
             Request request = new Request.Builder()
                     .url(uploadUrl)
-                    .post(RequestBody.create(fileContent))
+                    .post(RequestBody.create(fileContent, MediaType.parse(contentType)))
                     .header("Authorization", "Bearer " + serviceRoleKey)
-                    .header("Content-Type", file.getContentType())
                     .build();
 
             try (Response response = httpClient.newCall(request).execute()) {
