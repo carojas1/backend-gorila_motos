@@ -178,7 +178,8 @@ public class ResendEmailService {
                                   double costoTotal, String fecha,
                                   Long idRegistro, List<DetalleFactura> detalles) {
         String html = htmlServicio(nombreCliente, placa, tipoServicio, costoTotal, fecha, idRegistro, detalles);
-        return enviar(correoCliente, "Comprobante de servicio #" + (idRegistro != null ? idRegistro : "") + " — Gorila Motos", html);
+        String refAsunto = idRegistro != null ? String.format("ORD-%06d", idRegistro) : "";
+        return enviar(correoCliente, "Comprobante de servicio " + refAsunto + " — Gorila Motos", html);
     }
 
     /* ══════════════════════════════════════════════
@@ -699,7 +700,8 @@ public class ResendEmailService {
                                 double costoTotal, String fecha, Long idRegistro,
                                 List<DetalleFactura> detalles) {
         String costoStr = String.format("$%.2f", costoTotal);
-        String refNum   = idRegistro != null ? String.format("SRV-%05d", idRegistro) : "SRV";
+        // Número de orden ÚNICO: mismo formato que la web/impresión/APK (ordenNumero → ORD-000NNN)
+        String refNum   = idRegistro != null ? String.format("ORD-%06d", idRegistro) : "ORD";
         int yr = java.time.Year.now().getValue();
         String LOGO = "https://gmotors-frontend.vercel.app/brand/gorila-logo.png";
 
@@ -792,7 +794,7 @@ public class ResendEmailService {
                "<td align='right' style='vertical-align:middle'>" +
                "<div style='background:rgba(200,0,26,0.12);border:1px solid rgba(200,0,26,0.4);border-radius:8px;padding:10px 16px;text-align:center'>" +
                "<p style='margin:0;color:#E8192C;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase'>NOTA DE VENTA</p>" +
-               "<p style='margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:13px;font-weight:700;font-family:\"Courier New\",monospace'>#" + refNum + "</p>" +
+               "<p style='margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:13px;font-weight:700;font-family:\"Courier New\",monospace'>" + refNum + "</p>" +
                "</div></td></tr></table></td></tr>" +
 
                /* Saludo */
@@ -831,7 +833,7 @@ public class ResendEmailService {
                "<td><p style='margin:0;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65)'>Total del servicio</p>" +
                "<p class='total-amount' style='margin:6px 0 0;font-family:Georgia,serif;font-size:30px;font-weight:700;color:#fff;letter-spacing:-0.5px'>" + costoStr + "</p></td>" +
                "<td align='right'><p style='margin:0;font-size:11px;color:rgba(255,255,255,0.5)'>" + fecha + "</p>" +
-               "<p style='margin:8px 0 0;font-family:\"Courier New\",monospace;font-size:11px;color:rgba(255,255,255,0.35)'>#" + refNum + "</p></td>" +
+               "<p style='margin:8px 0 0;font-family:\"Courier New\",monospace;font-size:11px;color:rgba(255,255,255,0.35)'>" + refNum + "</p></td>" +
                "</tr></table></div></td></tr>" +
 
                /* Nota */
