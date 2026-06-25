@@ -1,31 +1,28 @@
 package com.projectBackend.GMotors.controller;
 
-import com.projectBackend.GMotors.model.DetalleFactura;
-import com.projectBackend.GMotors.service.DetalleFacturaService;
-import org.springframework.http.HttpStatus;
+import com.projectBackend.GMotors.dto.DetalleFacturaDTO;
+import com.projectBackend.GMotors.service.FacturaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/detalles-factura")
+@RequestMapping("/api/detalles-factura")
 public class DetalleFacturaController {
 
-    private final DetalleFacturaService detalleFacturaService;
+    private final FacturaService facturaService;
 
-    public DetalleFacturaController(DetalleFacturaService detalleFacturaService) {
-        this.detalleFacturaService = detalleFacturaService;
+    public DetalleFacturaController(FacturaService facturaService) {
+        this.facturaService = facturaService;
     }
 
-    // ================= CREAR DETALLE =================
-    // LOGICA MANEJADA EN REGISTROCONTROLLER
-
     // ================= OBTENER DETALLES POR FACTURA =================
-    //Logica descontinuad, si se necesita se debe de implementar en DetalleFactura service
-
-
-    // ================= ELIMINAR DETALLES POR FACTURA =================
-    //Logica descontinuad, si se necesita se debe de implementar en DetalleFactura service
-
+    // GET /api/detalles-factura/factura/{idFactura}
+    // Devuelve mano de obra + repuestos (inventario y manual) de una factura.
+    // Lo consumen: comprobante (InvoicePage), ranking de clientes y el Excel de contabilidad.
+    @GetMapping("/factura/{idFactura}")
+    public ResponseEntity<List<DetalleFacturaDTO>> porFactura(@PathVariable Long idFactura) {
+        return ResponseEntity.ok(facturaService.obtenerDetallesPorFactura(idFactura));
+    }
 }
