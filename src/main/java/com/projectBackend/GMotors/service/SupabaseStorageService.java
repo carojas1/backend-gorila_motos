@@ -34,11 +34,48 @@ public class SupabaseStorageService {
         return subirArchivo(file, "motos/perfil/");
     }
 
+    /**
+     * Garantiza que el bucket exista y sea público. Idempotente: si ya existe no hace nada.
+     * Resuelve el 400 "Bucket not found" de Supabase Storage sin necesidad de crear el bucket
+     * manualmente en el dashboard.
+     */
+    private void ensureBucket() {
+        try {
+            // ¿Existe ya?
+            Request get = new Request.Builder()
+                    .url(supabaseUrl + "/storage/v1/bucket/" + bucketName)
+                    .header("Authorization", "Bearer " + serviceRoleKey)
+                    .header("apikey", serviceRoleKey)
+                    .get().build();
+            try (Response r = httpClient.newCall(get).execute()) {
+                if (r.isSuccessful()) return; // ya existe
+            }
+            // Crearlo público
+            String json = "{\"id\":\"" + bucketName + "\",\"name\":\"" + bucketName + "\",\"public\":true,"
+                    + "\"file_size_limit\":10485760}";
+            Request create = new Request.Builder()
+                    .url(supabaseUrl + "/storage/v1/bucket")
+                    .header("Authorization", "Bearer " + serviceRoleKey)
+                    .header("apikey", serviceRoleKey)
+                    .post(RequestBody.create(json, MediaType.parse("application/json")))
+                    .build();
+            try (Response r = httpClient.newCall(create).execute()) {
+                String body = r.body() != null ? r.body().string() : "";
+                System.out.println("[SUPABASE] ensureBucket(" + bucketName + ") → " + r.code() + " " + body);
+            }
+        } catch (Exception e) {
+            System.out.println("[SUPABASE] ensureBucket error: " + e.getMessage());
+        }
+    }
+
     private String subirArchivo(MultipartFile file, String carpeta) {
         try {
             if (file.isEmpty()) {
                 throw new RuntimeException("El archivo está vacío");
             }
+
+            // Crea el bucket si no existe (evita el 400 "Bucket not found")
+            ensureBucket();
 
             String nombreArchivo = generarNombreArchivo(file.getOriginalFilename());
             // carpeta ya termina en "/" → concatenar directo evita el doble slash que rompía la subida
@@ -54,11 +91,13 @@ public class SupabaseStorageService {
                     ? file.getContentType() : "application/octet-stream";
             System.out.println("[SUPABASE] Subiendo a: " + uploadUrl);
             System.out.println("[SUPABASE] Bucket: " + bucketName + " | ContentType: " + contentType + " | Size: " + fileContent.length);
+            // x-upsert:true → si el objeto ya existe lo sobreescribe en vez de fallar con 400/409
             Request request = new Request.Builder()
                     .url(uploadUrl)
                     .post(RequestBody.create(fileContent, MediaType.parse(contentType)))
                     .header("Authorization", "Bearer " + serviceRoleKey)
                     .header("apikey", serviceRoleKey)
+                    .header("x-upsert", "true")
                     .build();
 
             try (Response response = httpClient.newCall(request).execute()) {
