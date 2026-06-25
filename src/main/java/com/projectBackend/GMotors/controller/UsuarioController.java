@@ -11,6 +11,7 @@ import com.projectBackend.GMotors.config.JwtUtil;
 import com.projectBackend.GMotors.dto.AuthResponse;
 import com.projectBackend.GMotors.model.Usuario;
 import com.projectBackend.GMotors.model.UsuarioRol;
+import com.projectBackend.GMotors.repository.UsuarioRepository;
 import com.projectBackend.GMotors.service.UsuarioService;
 import com.projectBackend.GMotors.service.SupabaseStorageService;
 
@@ -26,10 +27,13 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
-    
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
     @Autowired
     private SupabaseStorageService supabaseStorageService;
-    
+
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -200,6 +204,60 @@ public class UsuarioController {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new UploadResponse(null, "Error al subir la imagen: " + e.getMessage()));
         }
+    }
+
+    // ─── Canjer código de referido: 50 puntos para ambos ───────────────────────
+    // POST /api/usuarios/{id}/usar-referido   body: { "codigo": "nombre_usuario_del_referente" }
+    // Reglas: solo una vez por usuario; el código debe existir; no puede ser el propio código.
+    @PostMapping("/{id}/usar-referido")
+    public ResponseEntity<?> usarReferido(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body) {
+        String codigo = body.get("codigo");
+        if (codigo == null || codigo.isBlank()) {
+            return ResponseEntity.badRequest().body("Código requerido");
+        }
+        codigo = codigo.trim().toLowerCase();
+
+        Optional<Usuario> selfOpt = usuarioRepository.findById(id);
+        if (selfOpt.isEmpty()) return ResponseEntity.notFound().build();
+        Usuario self = selfOpt.get();
+
+        // Ya usó un código antes
+        if (self.getCodigoReferido() != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body("Ya usaste un código de referido anteriormente");
+        }
+        // Buscar referente por nombre_usuario (case-insensitive)
+        final String codigoFinal = codigo;
+        Optional<Usuario> refOpt = usuarioRepository.findAll().stream()
+            .filter(u -> u.getNombre_usuario() != null &&
+                         u.getNombre_usuario().trim().toLowerCase().equals(codigoFinal))
+            .findFirst();
+
+        if (refOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Código no válido. Verifica que sea el nombre de usuario exacto");
+        }
+        Usuario referente = refOpt.get();
+
+        // No puede usar su propio código
+        if (referente.getId_usuario().equals(id)) {
+            return ResponseEntity.badRequest().body("No puedes usar tu propio código");
+        }
+
+        // Acreditar 50 puntos a cada uno
+        self.setPuntosBonus((self.getPuntosBonus() != null ? self.getPuntosBonus() : 0) + 50);
+        self.setCodigoReferido(referente.getNombre_usuario());
+        referente.setPuntosBonus((referente.getPuntosBonus() != null ? referente.getPuntosBonus() : 0) + 50);
+
+        usuarioRepository.save(self);
+        usuarioRepository.save(referente);
+
+        return ResponseEntity.ok(java.util.Map.of(
+            "mensaje", "¡Código canjeado! 50 puntos acreditados a tu cuenta y a la de tu referente",
+            "puntos_bonus", self.getPuntosBonus()
+        ));
     }
 
     // ============== INNER CLASS ==============

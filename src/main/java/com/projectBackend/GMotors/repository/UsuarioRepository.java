@@ -9,5 +9,6 @@ import com.projectBackend.GMotors.model.Usuario;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-	Optional<Usuario> findByCorreo (String correo);
+	Optional<Usuario> findByCorreo(String correo);
+	Optional<Usuario> findByNombre_usuario(String nombre_usuario);
 }

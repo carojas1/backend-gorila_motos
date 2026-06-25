@@ -27,7 +27,13 @@ public class Usuario {
     @Column(length = 300)
     private String direccion;
     @JsonProperty("ruta_imagen")
-    private String ruta_imagen;    
+    private String ruta_imagen;
+    /** Puntos extra acumulados por referidos (dar o recibir un código) */
+    @Column(name = "puntos_bonus", columnDefinition = "integer DEFAULT 0")
+    private Integer puntosBonus = 0;
+    /** Nombre de usuario del referente que usó el código → null = aún no ha usado ningún código */
+    @Column(name = "codigo_referido", length = 100)
+    private String codigoReferido;
     
     // Relación con UsuarioRol
     @OneToMany(mappedBy = "usuario")
@@ -112,8 +118,13 @@ public class Usuario {
 
 	public String getDireccion() { return direccion; }
 	public void setDireccion(String direccion) { this.direccion = direccion; }
-	
-	
+
+	public Integer getPuntosBonus() { return puntosBonus != null ? puntosBonus : 0; }
+	public void setPuntosBonus(Integer puntosBonus) { this.puntosBonus = puntosBonus; }
+
+	public String getCodigoReferido() { return codigoReferido; }
+	public void setCodigoReferido(String codigoReferido) { this.codigoReferido = codigoReferido; }
+
 	public List<UsuarioRol> getRoles() {
 	    return roles;
 	}
