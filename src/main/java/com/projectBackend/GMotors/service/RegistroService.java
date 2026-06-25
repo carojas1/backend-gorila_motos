@@ -174,6 +174,7 @@ public class RegistroService {
 		RegistroListadoDTO dto = new RegistroListadoDTO();
 
 		dto.setIdRegistro(registro.getIdRegistro());
+		dto.setIdMoto(registro.getMoto().getIdMoto());
 		dto.setFecha(registro.getFecha());
 		dto.setDescripcion(registro.getObservaciones());
 		dto.setEstado(registro.getEstado());

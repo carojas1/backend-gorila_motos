@@ -11,6 +11,7 @@ public class RegistroListadoDTO {
 
     // ================== IDENTIFICACIÓN ==================
     private Long idRegistro;
+    private Long idMoto;
 
     // ================== CLIENTE ==================
     private String nombreCliente;
@@ -41,6 +42,9 @@ public class RegistroListadoDTO {
 
     public Long getId_registro() { return idRegistro; }
     public void setIdRegistro(Long idRegistro) { this.idRegistro = idRegistro; }
+
+    public Long getId_moto() { return idMoto; }
+    public void setIdMoto(Long idMoto) { this.idMoto = idMoto; }
 
     public String getNombre_cliente() { return nombreCliente; }
     public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
