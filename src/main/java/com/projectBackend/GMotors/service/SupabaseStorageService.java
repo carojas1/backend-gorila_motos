@@ -52,27 +52,24 @@ public class SupabaseStorageService {
 
             String contentType = (file.getContentType() != null && !file.getContentType().isBlank())
                     ? file.getContentType() : "application/octet-stream";
+            System.out.println("[SUPABASE] Subiendo a: " + uploadUrl);
+            System.out.println("[SUPABASE] Bucket: " + bucketName + " | ContentType: " + contentType + " | Size: " + fileContent.length);
             Request request = new Request.Builder()
                     .url(uploadUrl)
                     .post(RequestBody.create(fileContent, MediaType.parse(contentType)))
                     .header("Authorization", "Bearer " + serviceRoleKey)
+                    .header("apikey", serviceRoleKey)
                     .build();
 
             try (Response response = httpClient.newCall(request).execute()) {
 
-                // ⚠️ ALERTA: Supabase no responde
                 if (!response.isSuccessful()) {
                     String errorBody = response.body() != null ? response.body().string() : "Error desconocido";
+                    System.out.println("[SUPABASE] ERROR " + response.code() + ": " + errorBody);
 
-                    if (response.code() >= 500) {
-                        throw new RuntimeException(
-                                "El servicio de Supabase no está disponible. " +
-                                "Por favor, contacte con un administrador."
-                        );
-                    }
-
-                    throw new RuntimeException("Error de Supabase: " + response.code() + " - " + errorBody);
+                    throw new RuntimeException("Error de Supabase " + response.code() + ": " + errorBody);
                 }
+                System.out.println("[SUPABASE] Upload OK → " + construirUrlPublica(ruta));
 
                 return construirUrlPublica(ruta);
             }
