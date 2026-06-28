@@ -375,7 +375,7 @@ public class ResendEmailService {
                                                String nombreProducto, String codigoProducto,
                                                int cantidad, double pvp, double total,
                                                String fecha, String referencia) {
-        String ref    = referencia != null ? referencia : ("GRM-" + java.time.LocalDate.now().toString().replace("-","").substring(2));
+        String ref    = referencia != null ? referencia : ("GRM-" + java.time.LocalDate.now().toString().replace("-","").substring(2) + "-" + java.util.UUID.randomUUID().toString().substring(0,4).toUpperCase());
         String codigo = codigoProducto != null ? codigoProducto : "—";
 
         String html = htmlComprobante(nombreCliente, nombreProducto, codigo, cantidad, pvp, total, fecha, ref);

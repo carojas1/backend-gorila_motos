@@ -17,6 +17,7 @@ public class Producto {
     private String codigo_personal;
     private String nombre;
     private String descripcion;
+    @Column(name = "ruta_imagenproductos", columnDefinition = "TEXT")
     private String ruta_imagenproductos;
 
     @Column(name = "costo", precision = 10, scale = 2, nullable = false)
