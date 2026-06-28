@@ -52,13 +52,17 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
         	}
 
-        // Extraer token
+        // Extraer token de cabecera o de query param (para uploads en WebView que pierden headers)
         String header = request.getHeader("Authorization");
+        String token = null;
 
         if (header != null && header.startsWith("Bearer ")) {
+            token = header.substring(7);
+        } else if (request.getParameter("token") != null) {
+            token = request.getParameter("token");
+        }
 
-            String token = header.substring(7);
-
+        if (token != null) {
             if (!jwtUtil.validarToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
