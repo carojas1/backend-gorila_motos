@@ -26,6 +26,13 @@ public class SupabaseStorageService {
             .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
             .build();
 
+    private String getBaseUrl() {
+        if (supabaseUrl != null && supabaseUrl.endsWith("/")) {
+            return supabaseUrl.substring(0, supabaseUrl.length() - 1);
+        }
+        return supabaseUrl;
+    }
+
     public String subirImagenUsuario(MultipartFile file) {
         return subirArchivo(file, "usuarios/perfil/");
     }
@@ -47,7 +54,7 @@ public class SupabaseStorageService {
         try {
             // ¿Existe ya?
             Request get = new Request.Builder()
-                    .url(supabaseUrl + "/storage/v1/bucket/" + bucketName)
+                    .url(getBaseUrl() + "/storage/v1/bucket/" + bucketName)
                     .header("Authorization", "Bearer " + serviceRoleKey)
                     .header("apikey", serviceRoleKey)
                     .get().build();
@@ -56,7 +63,7 @@ public class SupabaseStorageService {
                     // Existe — garantizar que sea público (idempotente)
                     String patchJson = "{\"public\":true,\"file_size_limit\":10485760}";
                     Request patch = new Request.Builder()
-                            .url(supabaseUrl + "/storage/v1/bucket/" + bucketName)
+                            .url(getBaseUrl() + "/storage/v1/bucket/" + bucketName)
                             .header("Authorization", "Bearer " + serviceRoleKey)
                             .header("apikey", serviceRoleKey)
                             .put(RequestBody.create(patchJson, MediaType.parse("application/json")))
@@ -71,7 +78,7 @@ public class SupabaseStorageService {
             String json = "{\"id\":\"" + bucketName + "\",\"name\":\"" + bucketName + "\",\"public\":true,"
                     + "\"file_size_limit\":10485760}";
             Request create = new Request.Builder()
-                    .url(supabaseUrl + "/storage/v1/bucket")
+                    .url(getBaseUrl() + "/storage/v1/bucket")
                     .header("Authorization", "Bearer " + serviceRoleKey)
                     .header("apikey", serviceRoleKey)
                     .post(RequestBody.create(json, MediaType.parse("application/json")))
@@ -101,7 +108,7 @@ public class SupabaseStorageService {
 
             String uploadUrl = String.format(
                     "%s/storage/v1/object/%s/%s",
-                    supabaseUrl, bucketName, ruta
+                    getBaseUrl(), bucketName, ruta
             );
 
             String contentType = (file.getContentType() != null && !file.getContentType().isBlank())
@@ -145,7 +152,7 @@ public class SupabaseStorageService {
 
             String deleteUrl = String.format(
                     "%s/storage/v1/object/%s/%s",
-                    supabaseUrl, bucketName, ruta
+                    getBaseUrl(), bucketName, ruta
             );
 
             Request request = new Request.Builder()
@@ -188,7 +195,7 @@ public class SupabaseStorageService {
     private String construirUrlPublica(String ruta) {
         return String.format(
                 "%s/storage/v1/object/public/%s/%s",
-                supabaseUrl, bucketName, ruta
+                getBaseUrl(), bucketName, ruta
         );
     }
 

@@ -16,6 +16,7 @@ public class AlertaMantenimientoService {
     @Autowired private AlertaEnviadaRepository          alertaRepo;
     @Autowired private UsuarioRepository                usuarioRepo;
     @Autowired private ResendEmailService               emailService;
+    @Autowired private MantenimientoRealizadoRepository mantenimientoRepo;
 
     /* ── DTO de estado de mantenimiento (cálculo, sin BD) ──────────────────── */
     public static class EstadoMantenimiento {
@@ -37,11 +38,22 @@ public class AlertaMantenimientoService {
         for (ParametroMantenimiento p : params) {
             int intervalo       = p.getIntervaloKm();
             int kmActual        = moto.getKilometraje();
-            int ultimoUmbral    = (kmActual / intervalo) * intervalo;
+            
+            // 1. Obtener el último mantenimiento real de la base de datos
+            List<MantenimientoRealizado> mantenimientos = mantenimientoRepo.findByIdMotoAndTipo(moto.getId_moto(), p.getTipoMantenimiento());
+            
+            int ultimoUmbral = 0; // Fallback si no hay mantenimientos (no debería pasar con las motos nuevas)
+            if (mantenimientos != null && !mantenimientos.isEmpty()) {
+                ultimoUmbral = mantenimientos.stream()
+                        .mapToInt(MantenimientoRealizado::getKmServicio)
+                        .max()
+                        .orElse(0);
+            }
+
             int proximoUmbral   = ultimoUmbral + intervalo;
-            int kmDesdeUltimo   = kmActual - ultimoUmbral;
+            int kmDesdeUltimo   = Math.max(0, kmActual - ultimoUmbral);
             int porcentaje      = Math.min(100, (int) ((double) kmDesdeUltimo / intervalo * 100));
-            int kmRestante      = proximoUmbral - kmActual;
+            int kmRestante      = Math.max(0, proximoUmbral - kmActual);
 
             String estado = porcentaje >= 100 ? "VENCIDO"
                           : porcentaje >= 80  ? "PROXIMO"
@@ -83,20 +95,31 @@ public class AlertaMantenimientoService {
 
         for (ParametroMantenimiento p : params) {
             int intervalo = p.getIntervaloKm();
-            int umbral    = (kmActual / intervalo) * intervalo;
-            if (umbral == 0) continue;
+            
+            // Buscar el último mantenimiento real para basar la alerta
+            List<MantenimientoRealizado> mantenimientos = mantenimientoRepo.findByIdMotoAndTipo(moto.getId_moto(), p.getTipoMantenimiento());
+            int ultimoUmbral = 0;
+            if (mantenimientos != null && !mantenimientos.isEmpty()) {
+                ultimoUmbral = mantenimientos.stream()
+                        .mapToInt(MantenimientoRealizado::getKmServicio)
+                        .max()
+                        .orElse(0);
+            }
+            int proximoUmbral = ultimoUmbral + intervalo;
+            int kmDesdeUltimo = Math.max(0, kmActual - ultimoUmbral);
+            
+            if (proximoUmbral == 0 || ultimoUmbral == 0) continue; // Evitar spam si algo falla
 
             String tipoVencido = p.getTipoMantenimiento() + "_VENCIDO";
-            if (!alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoVencido, umbral)) {
-                pendientesGuardar.add(new AlertaEnviada(moto.getId_moto(), tipoVencido, umbral, LocalDateTime.now()));
+            if (kmDesdeUltimo >= intervalo && !alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoVencido, proximoUmbral)) {
+                pendientesGuardar.add(new AlertaEnviada(moto.getId_moto(), tipoVencido, proximoUmbral, LocalDateTime.now()));
             }
 
-            int nextUmbral = umbral + intervalo;
-            int kmRestante = nextUmbral - kmActual;
-            if (kmRestante <= (int)(intervalo * 0.20)) {
+            int kmRestante = proximoUmbral - kmActual;
+            if (kmRestante > 0 && kmRestante <= (int)(intervalo * 0.20)) {
                 String tipoProximo = p.getTipoMantenimiento() + "_PROXIMO";
-                if (!alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoProximo, nextUmbral)) {
-                    pendientesGuardar.add(new AlertaEnviada(moto.getId_moto(), tipoProximo, nextUmbral, LocalDateTime.now()));
+                if (!alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoProximo, proximoUmbral)) {
+                    pendientesGuardar.add(new AlertaEnviada(moto.getId_moto(), tipoProximo, proximoUmbral, LocalDateTime.now()));
                 }
             }
         }

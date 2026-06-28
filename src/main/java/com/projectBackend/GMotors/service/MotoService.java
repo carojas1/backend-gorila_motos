@@ -6,9 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.projectBackend.GMotors.model.MantenimientoRealizado;
 import com.projectBackend.GMotors.model.Moto;
+import com.projectBackend.GMotors.model.ParametroMantenimiento;
+import com.projectBackend.GMotors.repository.MantenimientoRealizadoRepository;
 import com.projectBackend.GMotors.repository.MotoRepository;
+import com.projectBackend.GMotors.repository.ParametroMantenimientoRepository;
 import com.projectBackend.GMotors.repository.UsuarioRepository;
+import java.time.LocalDate;
 
 @Service
 public class MotoService {
@@ -25,14 +30,35 @@ public class MotoService {
     @Autowired
     private AlertaMantenimientoService alertaService;
 
-    // ✅ Crear moto (CON validación de usuario)
+    @Autowired
+    private MantenimientoRealizadoRepository mantenimientoRealizadoRepository;
+
+    @Autowired
+    private ParametroMantenimientoRepository parametroMantenimientoRepository;
+
+    // ✅ Crear moto (CON validación de usuario e inicialización de mantenimientos)
     @Transactional
     public Moto crearMoto(Moto moto) {
         // Validar que el usuario exista antes de crear la moto
         if (!usuarioRepository.existsById(moto.getId_usuario())) {
             throw new RuntimeException("Usuario no encontrado con ID: " + moto.getId_usuario());
         }
-        return motoRepository.save(moto);
+        Moto nuevaMoto = motoRepository.save(moto);
+
+        // Inicializar mantenimientos base (0% desgaste al kilometraje actual)
+        if (nuevaMoto.getCilindraje() != null && nuevaMoto.getKilometraje() != null) {
+            List<ParametroMantenimiento> parametros = parametroMantenimientoRepository.findByCc(nuevaMoto.getCilindraje());
+            for (ParametroMantenimiento p : parametros) {
+                MantenimientoRealizado inicial = new MantenimientoRealizado();
+                inicial.setIdMoto(nuevaMoto.getIdMoto());
+                inicial.setTipo(p.getTipoMantenimiento());
+                inicial.setKmServicio(nuevaMoto.getKilometraje());
+                inicial.setFecha(LocalDate.now());
+                mantenimientoRealizadoRepository.save(inicial);
+            }
+        }
+
+        return nuevaMoto;
     }
 
     // ✅ Buscar moto por ID
