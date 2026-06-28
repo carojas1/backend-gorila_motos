@@ -108,7 +108,7 @@ public class AlertaMantenimientoService {
             int proximoUmbral = ultimoUmbral + intervalo;
             int kmDesdeUltimo = Math.max(0, kmActual - ultimoUmbral);
             
-            if (proximoUmbral == 0 || ultimoUmbral == 0) continue; // Evitar spam si algo falla
+            if (proximoUmbral == 0) continue; // Evitar spam si algo falla, pero permitir que motos nuevas (ultimoUmbral == 0) reciban alertas
 
             String tipoVencido = p.getTipoMantenimiento() + "_VENCIDO";
             if (kmDesdeUltimo >= intervalo && !alertaRepo.existsByIdMotoAndTipoAndKmUmbral(moto.getId_moto(), tipoVencido, proximoUmbral)) {
