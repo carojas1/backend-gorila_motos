@@ -79,6 +79,15 @@ public class UsuarioService {
         if (usuarioActualizado.getDescripcion() != null) {
             usuarioExistente.setDescripcion(usuarioActualizado.getDescripcion());
         }
+        if (usuarioActualizado.getTelefono() != null) {
+            usuarioExistente.setTelefono(usuarioActualizado.getTelefono());
+        }
+        if (usuarioActualizado.getCedula() != null) {
+            usuarioExistente.setCedula(usuarioActualizado.getCedula());
+        }
+        if (usuarioActualizado.getDireccion() != null) {
+            usuarioExistente.setDireccion(usuarioActualizado.getDireccion());
+        }
     	// ✅ Manejar cambios de imagen
 		if (usuarioActualizado.getRutaimagen() != null) {
 			// Si la imagen cambió, eliminar la anterior
