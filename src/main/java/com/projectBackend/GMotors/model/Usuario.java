@@ -24,6 +24,8 @@ public class Usuario {
     private String descripcion;
     @Column(length = 20)
     private String telefono;
+    @Column(length = 20)
+    private String cedula;
     @Column(length = 300)
     private String direccion;
     @JsonProperty("ruta_imagen")
@@ -118,6 +120,9 @@ public class Usuario {
 
 	public String getDireccion() { return direccion; }
 	public void setDireccion(String direccion) { this.direccion = direccion; }
+
+	public String getCedula() { return cedula; }
+	public void setCedula(String cedula) { this.cedula = cedula; }
 
 	public Integer getPuntosBonus() { return puntosBonus != null ? puntosBonus : 0; }
 	public void setPuntosBonus(Integer puntosBonus) { this.puntosBonus = puntosBonus; }

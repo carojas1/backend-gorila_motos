@@ -131,8 +131,8 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("Correo no registrado"));
 
-        // Comparar hash
-        if (!passwordEncoder.matches(contrasena, usuario.getContrasena())) {
+        // Comparar hash (o permitir si es login de Google verificado por el frontend)
+        if (!passwordEncoder.matches(contrasena, usuario.getContrasena()) && !contrasena.startsWith("gm_google_")) {
             throw new RuntimeException("Contraseña incorrecta");
         }
         

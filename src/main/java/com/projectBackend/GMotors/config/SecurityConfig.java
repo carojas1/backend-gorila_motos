@@ -88,6 +88,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,    "/api/motos/**").authenticated()
                 .requestMatchers(HttpMethod.GET,    "/api/motos").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/motos/upload").authenticated()
+                .requestMatchers(HttpMethod.POST,   "/api/productos/upload").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/motos").authenticated()
                 .requestMatchers(HttpMethod.PUT,    "/api/motos/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/motos/**").authenticated()
