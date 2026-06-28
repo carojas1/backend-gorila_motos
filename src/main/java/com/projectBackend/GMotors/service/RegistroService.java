@@ -181,6 +181,11 @@ public class RegistroService {
 
 		dto.setNombreCliente(registro.getCliente().getNombre_completo());
 
+		if (registro.getEncargado() != null) {
+			dto.setIdEncargado(registro.getEncargado().getId_usuario());
+			dto.setNombreEncargado(registro.getEncargado().getNombre_completo());
+		}
+
 		dto.setMarcaMoto(registro.getMoto().getMarca());
 
 		dto.setModeloMoto(registro.getMoto().getModelo());

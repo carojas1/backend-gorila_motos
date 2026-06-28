@@ -53,11 +53,21 @@ public class UsuarioService {
         // Asignar rol CLIENTE por defecto al registrarse.
         // El admin asigna roles superiores (ADMIN/MECANICO) desde la interfaz de Perfiles.
         try {
+            // Buscar por nombre (case insensitive) — soporta "CLIENTE", "Cliente", etc.
             Rol rolCliente = rolRepository.findByNombre("CLIENTE")
-                .orElseThrow(() -> new RuntimeException("Rol CLIENTE no encontrado en la base de datos"));
+                .orElseGet(() -> rolRepository.findByNombre("Cliente")
+                .orElseGet(() -> rolRepository.findById(2L)
+                .orElseThrow(() -> new RuntimeException(
+                    "[GMotors] Rol CLIENTE no encontrado en la BD. " +
+                    "Ejecutar insertar_admin.sql o reiniciar el backend para que el seeder cree los roles."))));
+            
             UsuarioRol usuarioRol = new UsuarioRol(nuevo.getId_usuario(), rolCliente.getId_rol().intValue());
             usuarioRolRepository.save(usuarioRol);
+            System.out.println("[GMotors] Rol CLIENTE asignado al usuario: " + nuevo.getCorreo());
         } catch (Exception e) {
+            // Log detallado — no silenciar el error
+            System.err.println("[GMotors] ERROR: No se pudo asignar rol CLIENTE al usuario " + 
+                nuevo.getCorreo() + ": " + e.getMessage());
             e.printStackTrace();
         }
         

@@ -20,7 +20,11 @@ public class SupabaseStorageService {
     @Value("${supabase.storage.bucket}")
     private String bucketName;
 
-    private final OkHttpClient httpClient = new OkHttpClient();
+    private final OkHttpClient httpClient = new OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .build();
 
     public String subirImagenUsuario(MultipartFile file) {
         return subirArchivo(file, "usuarios/perfil/");
@@ -48,9 +52,22 @@ public class SupabaseStorageService {
                     .header("apikey", serviceRoleKey)
                     .get().build();
             try (Response r = httpClient.newCall(get).execute()) {
-                if (r.isSuccessful()) return; // ya existe
+                if (r.isSuccessful()) {
+                    // Existe — garantizar que sea público (idempotente)
+                    String patchJson = "{\"public\":true,\"file_size_limit\":10485760}";
+                    Request patch = new Request.Builder()
+                            .url(supabaseUrl + "/storage/v1/bucket/" + bucketName)
+                            .header("Authorization", "Bearer " + serviceRoleKey)
+                            .header("apikey", serviceRoleKey)
+                            .put(RequestBody.create(patchJson, MediaType.parse("application/json")))
+                            .build();
+                    try (Response pr = httpClient.newCall(patch).execute()) {
+                        System.out.println("[SUPABASE] ensureBucket PUT public → " + pr.code());
+                    }
+                    return;
+                }
             }
-            // Crearlo público
+            // No existe — crearlo público
             String json = "{\"id\":\"" + bucketName + "\",\"name\":\"" + bucketName + "\",\"public\":true,"
                     + "\"file_size_limit\":10485760}";
             Request create = new Request.Builder()
@@ -135,6 +152,7 @@ public class SupabaseStorageService {
                     .url(deleteUrl)
                     .delete()
                     .header("Authorization", "Bearer " + serviceRoleKey)
+                    .header("apikey", serviceRoleKey)
                     .build();
 
             try (Response response = httpClient.newCall(request).execute()) {

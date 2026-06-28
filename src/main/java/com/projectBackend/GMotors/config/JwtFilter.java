@@ -61,6 +61,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
             if (!jwtUtil.validarToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write("{\"error\":\"Token inv\u00e1lido o expirado\",\"status\":401}");
                 return;
             }
 
@@ -76,6 +79,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Si no hay token → error 401
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"error\":\"Se requiere autenticaci\u00f3n\",\"status\":401}");
     }
 
 }

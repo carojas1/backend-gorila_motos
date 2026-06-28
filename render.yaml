@@ -49,7 +49,7 @@ services:
 
       # ── Config JWT ────────────────────────────────────────────────────────────
       - key: JWT_EXPIRATION_MINUTES
-        value: "120"
+        value: "10080"
 
       # ── GitLab (deshabilitado) ────────────────────────────────────────────────
       - key: GITLAB_ENABLED

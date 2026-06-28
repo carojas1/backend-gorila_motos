@@ -16,6 +16,10 @@ public class RegistroListadoDTO {
     // ================== CLIENTE ==================
     private String nombreCliente;
 
+    // ================== ENCARGADO ==================
+    private Long idEncargado;
+    private String nombreEncargado;
+
     // ================== MOTO ==================
     private String marcaMoto;
     private String modeloMoto;
@@ -48,6 +52,12 @@ public class RegistroListadoDTO {
 
     public String getNombre_cliente() { return nombreCliente; }
     public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+
+    public Long getId_encargado() { return idEncargado; }
+    public void setIdEncargado(Long idEncargado) { this.idEncargado = idEncargado; }
+
+    public String getNombre_encargado() { return nombreEncargado; }
+    public void setNombreEncargado(String nombreEncargado) { this.nombreEncargado = nombreEncargado; }
 
     public String getMarca_moto() { return marcaMoto; }
     public void setMarcaMoto(String marcaMoto) { this.marcaMoto = marcaMoto; }

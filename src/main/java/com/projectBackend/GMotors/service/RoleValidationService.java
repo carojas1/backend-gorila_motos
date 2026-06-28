@@ -37,7 +37,7 @@ public class RoleValidationService {
         if (userId == null) return false;
         List<UsuarioRol> roles = usuarioRolRepository.findByIdUsuarioAndEstado(userId, 1);
         return roles.stream()
-            .anyMatch(ur -> ur.getIdRol() != null && ur.getIdRol() == ROL_ADMIN);
+            .anyMatch(ur -> ur.getIdRol() != null && ur.getIdRol().equals(ROL_ADMIN));
     }
     
     /**
@@ -298,7 +298,7 @@ public class RoleValidationService {
     }
 
 	public void validarCombinacionRoles(Long usuarioId, Integer rolId) {
-		// TODO Auto-generated method stub
-		
+		// Delegar al método principal con conversión segura de tipo
+		validarCombinacionRoles(usuarioId, rolId != null ? rolId.longValue() : null);
 	}
 }
