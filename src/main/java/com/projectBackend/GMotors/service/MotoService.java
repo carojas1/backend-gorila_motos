@@ -52,12 +52,9 @@ public class MotoService {
                 MantenimientoRealizado inicial = new MantenimientoRealizado();
                 inicial.setIdMoto(nuevaMoto.getIdMoto());
                 inicial.setTipo(p.getTipoMantenimiento());
-                // Extrapolar el último cambio teórico basado en el intervalo para no empezar desde 0% de desgaste irreal
-                int kmServicio = nuevaMoto.getKilometraje();
-                if (p.getIntervaloKm() != null && p.getIntervaloKm() > 0) {
-                    kmServicio = (nuevaMoto.getKilometraje() / p.getIntervaloKm()) * p.getIntervaloKm();
-                }
-                inicial.setKmServicio(kmServicio);
+                // El cliente desea que al registrar una moto, el desgaste inicie en 0% desde su kilometraje actual.
+                // Por lo tanto, el último mantenimiento teórico (kmServicio) debe ser igual al kilometraje actual.
+                inicial.setKmServicio(nuevaMoto.getKilometraje());
                 inicial.setFecha(LocalDate.now());
                 mantenimientoRealizadoRepository.save(inicial);
             }

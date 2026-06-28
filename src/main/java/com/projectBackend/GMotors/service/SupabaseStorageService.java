@@ -101,7 +101,14 @@ public class SupabaseStorageService {
             // Crea el bucket si no existe (evita el 400 "Bucket not found")
             ensureBucket();
 
-            String nombreArchivo = generarNombreArchivo(file.getOriginalFilename());
+            // Sanitizar el nombre del archivo (quitar espacios y caracteres extraños)
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null) {
+                originalFilename = "archivo.bin";
+            }
+            String sanitizedFilename = originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
+            String nombreArchivo = UUID.randomUUID().toString() + "_" + sanitizedFilename;
+            
             // carpeta ya termina en "/" → concatenar directo evita el doble slash que rompía la subida
             String ruta = carpeta + nombreArchivo;
             byte[] fileContent = file.getBytes();

@@ -40,6 +40,7 @@ public class Moto {
 	@Column(nullable = false)
 	private Integer cilindraje;
 	
+	@JsonProperty("id_usuario")
 	@Column(name = "id_usuario", nullable = false)
 	private Long idUsuario;
 
