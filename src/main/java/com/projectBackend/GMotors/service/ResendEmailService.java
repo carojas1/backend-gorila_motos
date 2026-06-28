@@ -410,23 +410,23 @@ public class ResendEmailService {
                "<tr><td align='center'>" +
                "<table class='wrap' width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;background:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 2px 24px rgba(0,0,0,0.10)'>" +
 
-               /* ── Banda roja superior ── */
-               "<tr><td style='background:#C8001A;height:5px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
+               /* ── Banda superior ── */
+               "<tr><td style='background:#0F172A;height:5px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
 
                /* ── Header: logo + info empresa ── */
-               "<tr><td class='hpad' style='background:#0D0D12;padding:28px 36px'>" +
+               "<tr><td class='hpad' style='background:#1E293B;padding:28px 36px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td style='vertical-align:middle'>" +
-               "<img src='https://backend-gorila-motos.onrender.com/images/gorila-logo.png' alt='Gorila Motos' width='54' height='54' style='display:block;border-radius:12px;border:2px solid rgba(200,0,26,0.5)' />" +
+               "<img src='https://backend-gorila-motos.onrender.com/images/gorila-logo.png' alt='Gorila Motos' width='54' height='54' style='display:block;border-radius:12px;border:2px solid rgba(255,255,255,0.1)' />" +
                "</td>" +
                "<td style='vertical-align:middle;padding-left:14px'>" +
-               "<p style='margin:0;color:#fff;font-size:22px;font-weight:700;font-family:Georgia,serif;letter-spacing:-0.3px'>Gorila <span style='color:#E8192C'>Motos</span></p>" +
-               "<p style='margin:3px 0 0;color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-family:Arial,sans-serif'>Taller Mecánico · Cuenca, Ecuador</p>" +
+               "<p style='margin:0;color:#fff;font-size:22px;font-weight:700;font-family:Georgia,serif;letter-spacing:-0.3px'>Gorila <span style='color:#3B82F6'>Motos</span></p>" +
+               "<p style='margin:3px 0 0;color:rgba(255,255,255,0.45);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-family:Arial,sans-serif'>Taller Mecánico · Cuenca, Ecuador</p>" +
                "</td>" +
                "<td align='right' style='vertical-align:middle'>" +
-               "<div style='background:rgba(200,0,26,0.12);border:1px solid rgba(200,0,26,0.4);border-radius:8px;padding:10px 16px;text-align:center'>" +
-               "<p style='margin:0;color:#E8192C;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;font-family:Arial,sans-serif'>COMPROBANTE</p>" +
-               "<p style='margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:13px;font-weight:700;font-family:\"Courier New\",monospace'>#" + referencia + "</p>" +
+               "<div style='background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:10px 16px;text-align:center'>" +
+               "<p style='margin:0;color:#60A5FA;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;font-family:Arial,sans-serif'>COMPROBANTE</p>" +
+               "<p style='margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:13px;font-weight:700;font-family:\"Courier New\",monospace'>#" + referencia + "</p>" +
                "</div></td></tr></table></td></tr>" +
 
                /* ── Saludo ── */
@@ -458,15 +458,15 @@ public class ResendEmailService {
                "<table cellpadding='0' cellspacing='0'>" +
                "<tr><td style='padding:6px 14px;font-family:Arial,sans-serif;font-size:11px;color:#9CA3AF;text-align:right'>Subtotal</td>" +
                "<td style='padding:6px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#374151;text-align:right'>" + totalStr + "</td></tr>" +
-               "<tr style='border-top:2px solid #C8001A'>" +
+               "<tr style='border-top:2px solid #0F172A'>" +
                "<td style='padding:8px 14px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#111;text-align:right;letter-spacing:0.5px;text-transform:uppercase'>TOTAL</td>" +
-               "<td style='padding:8px 14px;font-family:Georgia,serif;font-size:20px;font-weight:700;color:#C8001A;text-align:right'>" + totalStr + "</td></tr>" +
+               "<td style='padding:8px 14px;font-family:Georgia,serif;font-size:20px;font-weight:700;color:#0F172A;text-align:right'>" + totalStr + "</td></tr>" +
                "</table></td></tr></table>" +
                "</td></tr>" +
 
                /* ── Banda de total pagado ── */
                "<tr><td style='padding:20px 36px'>" +
-               "<div style='background:linear-gradient(135deg,#C8001A 0%,#8B0000 100%);border-radius:10px;padding:18px 24px'>" +
+               "<div style='background:linear-gradient(135deg,#1E293B 0%,#0F172A 100%);border-radius:10px;padding:18px 24px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65)'>Total pagado</p>" +
                "<p class='total-amount' style='margin:6px 0 0;font-family:Georgia,serif;font-size:30px;font-weight:700;color:#fff;letter-spacing:-0.5px'>" + totalStr + "</p></td>" +
@@ -479,19 +479,19 @@ public class ResendEmailService {
                "<div style='background:#FFFBF2;border:1px solid #FDE68A;border-radius:8px;padding:14px 18px'>" +
                "<p style='margin:0;font-family:Arial,sans-serif;font-size:12px;color:#78350F;line-height:1.65'>" +
                "Conserve este correo como comprobante oficial de su compra. Para consultas o garantías comuníquese con nosotros a " +
-               "<a href='mailto:gorilamotos2026@gmail.com' style='color:#C8001A;font-weight:700'>gorilamotos2026@gmail.com</a> " +
+               "<a href='mailto:gorilamotos2026@gmail.com' style='color:#3B82F6;font-weight:700'>gorilamotos2026@gmail.com</a> " +
                "o visítenos en nuestro taller en Cuenca, Ecuador.</p></div></td></tr>" +
 
                /* ── Footer ── */
                "<tr><td class='fpad' style='background:#F8F9FA;border-top:1px solid #E5E7EB;padding:18px 36px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;font-family:Arial,sans-serif;font-size:10px;color:#9CA3AF'>© " + yr + " Gorila Motos S.A.S. &nbsp;·&nbsp; Cuenca, Ecuador</p>" +
-               "<p style='margin:3px 0 0;font-family:Arial,sans-serif;font-size:10px;color:#C8001A'><a href='https://gorila-motos.vercel.app' style='color:#C8001A;text-decoration:none'>gorila-motos.vercel.app</a></p></td>" +
-               "<td align='right'><img src='https://gorila-motos.vercel.app/brand/gorila-logo.png' alt='' width='36' height='36' style='border-radius:8px;border:1px solid rgba(0,0,0,0.1)' /></td>" +
+               "<p style='margin:3px 0 0;font-family:Arial,sans-serif;font-size:10px;color:#3B82F6'><a href='https://pagina-web-gorila-motos.vercel.app/' style='color:#3B82F6;text-decoration:none'>pagina-web-gorila-motos.vercel.app</a></p></td>" +
+               "<td align='right'><img src='https://backend-gorila-motos.onrender.com/images/gorila-logo.png' alt='' width='36' height='36' style='border-radius:8px;border:1px solid rgba(0,0,0,0.1)' /></td>" +
                "</tr></table></td></tr>" +
 
-               /* ── Banda roja inferior ── */
-               "<tr><td style='background:#C8001A;height:4px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
+               /* ── Banda inferior ── */
+               "<tr><td style='background:#0F172A;height:4px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
 
                "</table></td></tr></table>" +
                "</body></html>";
@@ -777,8 +777,8 @@ public class ResendEmailService {
                "<table class='outer' width='100%' cellpadding='0' cellspacing='0' style='padding:32px 16px;background:#050505'>" +
                "<tr><td align='center'>" +
                "<table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;background:#0D0D12;border-radius:12px;overflow:hidden;border:1px solid #1F1F2E;box-shadow:0 10px 30px rgba(0,0,0,0.5)'>" +
-               /* Banda roja superior */
-               "<tr><td style='background:#E11428;height:4px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
+               /* Banda superior */
+               "<tr><td style='background:#0F172A;height:4px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
                /* Header con logo */
                "<tr><td class='hpad' style='padding:32px 36px 24px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
@@ -786,12 +786,12 @@ public class ResendEmailService {
                "<img src='" + LOGO + "' alt='Gorila Motos' width='56' height='56' style='display:block;border-radius:12px;border:1px solid rgba(255,255,255,0.1)' />" +
                "</td>" +
                "<td style='vertical-align:middle;padding-left:16px'>" +
-               "<p style='margin:0;color:#fff;font-size:24px;font-weight:900;letter-spacing:-0.5px'>Gorila <span style='color:#E11428'>Motos</span></p>" +
+               "<p style='margin:0;color:#fff;font-size:24px;font-weight:900;letter-spacing:-0.5px'>Gorila <span style='color:#3B82F6'>Motos</span></p>" +
                "<p style='margin:4px 0 0;color:#8B8FA8;font-size:11px;letter-spacing:2px;text-transform:uppercase'>Taller Mecánico</p>" +
                "</td>" +
                "<td align='right' style='vertical-align:middle'>" +
-               "<div style='background:rgba(225,20,40,0.1);border:1px solid rgba(225,20,40,0.3);border-radius:8px;padding:8px 12px;text-align:center'>" +
-               "<p style='margin:0;color:#E11428;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase'>COMPROBANTE</p>" +
+               "<div style='background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:8px 12px;text-align:center'>" +
+               "<p style='margin:0;color:#60A5FA;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase'>COMPROBANTE</p>" +
                "<p style='margin:4px 0 0;color:#fff;font-size:14px;font-weight:700;font-family:\"Courier New\",monospace'>" + refNum + "</p>" +
                "</div></td></tr></table></td></tr>" +
                /* Saludo y Detalles */
@@ -809,7 +809,7 @@ public class ResendEmailService {
                (tieneDetalles ? ("<tr><td style='padding:0 36px 24px'><table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse'>" + filasHtml.toString().replaceAll("color:#111", "color:#fff").replaceAll("color:#374151", "color:#EAEAEA").replaceAll("border-bottom:1px solid #E5E7EB", "border-bottom:1px solid #1F1F2E").replaceAll("border-bottom:1px solid #F3F4F6", "border-bottom:1px solid #1F1F2E").replaceAll("background:#F3F4F6", "background:#15151D").replaceAll("background:#EFF6FF", "background:#131B2A").replaceAll("background:#FFFBEB", "background:#1F180B") + "</table></td></tr>") : "") +
                /* Total */
                "<tr><td style='padding:0 36px 32px'>" +
-               "<div style='background:linear-gradient(135deg, #E11428 0%, #8B0000 100%);border-radius:12px;padding:24px'>" +
+               "<div style='background:linear-gradient(135deg, #1E293B 0%, #0F172A 100%);border-radius:12px;padding:24px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7)'>Total Abonado</p>" +
                "<p class='total-amount' style='margin:4px 0 0;font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px'>" + costoStr + "</p></td>" +
@@ -819,7 +819,7 @@ public class ResendEmailService {
                "<tr><td class='fpad' style='background:#09090D;padding:24px 36px;border-top:1px solid #1F1F2E'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td><p style='margin:0;font-size:11px;color:#8B8FA8'>© " + yr + " Gorila Motos. Cuenca, Ecuador.</p>" +
-               "<p style='margin:4px 0 0;font-size:11px'><a href='https://gmotors-frontend.vercel.app' style='color:#E11428;text-decoration:none'>gmotors-frontend.vercel.app</a></p></td>" +
+               "<p style='margin:4px 0 0;font-size:11px'><a href='https://pagina-web-gorila-motos.vercel.app/' style='color:#3B82F6;text-decoration:none'>pagina-web-gorila-motos.vercel.app</a></p></td>" +
                "<td align='right'><img src='" + LOGO + "' alt='' width='32' height='32' style='border-radius:8px;opacity:0.5' /></td>" +
                "</tr></table></td></tr>" +
                "</table></td></tr></table></body></html>";
