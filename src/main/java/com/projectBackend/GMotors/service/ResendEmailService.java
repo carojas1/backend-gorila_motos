@@ -766,7 +766,7 @@ public class ResendEmailService {
         return "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>" +
                "<meta name='viewport' content='width=device-width,initial-scale=1'>" +
                "<style>" +
-               "body{margin:0;padding:0;background:#EAEDF2;font-family:Arial,sans-serif}" +
+               "body{margin:0;padding:0;background:#050505;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}" +
                "@media only screen and (max-width:620px){" +
                ".outer{padding:12px 4px!important}.hpad{padding:22px 20px!important}" +
                ".bpad{padding:24px 20px!important}.tpad{padding:0 20px!important}" +
@@ -774,89 +774,55 @@ public class ResendEmailService {
                "}" +
                "</style>" +
                "</head><body>" +
-               "<table class='outer' width='100%' cellpadding='0' cellspacing='0' style='padding:32px 16px;background:#EAEDF2'>" +
+               "<table class='outer' width='100%' cellpadding='0' cellspacing='0' style='padding:32px 16px;background:#050505'>" +
                "<tr><td align='center'>" +
-               "<table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;background:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 2px 24px rgba(0,0,0,0.10)'>" +
-
+               "<table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;background:#0D0D12;border-radius:12px;overflow:hidden;border:1px solid #1F1F2E;box-shadow:0 10px 30px rgba(0,0,0,0.5)'>" +
                /* Banda roja superior */
-               "<tr><td style='background:#C8001A;height:5px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
-
+               "<tr><td style='background:#E11428;height:4px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
                /* Header con logo */
-               "<tr><td class='hpad' style='background:#0D0D12;padding:24px 36px'>" +
+               "<tr><td class='hpad' style='padding:32px 36px 24px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td style='vertical-align:middle'>" +
-               "<img src='" + LOGO + "' alt='Gorila Motos' width='50' height='50' style='display:block;border-radius:10px;border:2px solid rgba(200,0,26,0.5)' />" +
+               "<img src='" + LOGO + "' alt='Gorila Motos' width='56' height='56' style='display:block;border-radius:12px;border:1px solid rgba(255,255,255,0.1)' />" +
                "</td>" +
-               "<td style='vertical-align:middle;padding-left:13px'>" +
-               "<p style='margin:0;color:#fff;font-size:21px;font-weight:900;font-family:Georgia,serif;letter-spacing:-0.3px'>Gorila <span style='color:#E8192C'>Motos</span></p>" +
-               "<p style='margin:3px 0 0;color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:2.5px;text-transform:uppercase'>Taller Mecánico · Cuenca, Ecuador</p>" +
+               "<td style='vertical-align:middle;padding-left:16px'>" +
+               "<p style='margin:0;color:#fff;font-size:24px;font-weight:900;letter-spacing:-0.5px'>Gorila <span style='color:#E11428'>Motos</span></p>" +
+               "<p style='margin:4px 0 0;color:#8B8FA8;font-size:11px;letter-spacing:2px;text-transform:uppercase'>Taller Mecánico</p>" +
                "</td>" +
                "<td align='right' style='vertical-align:middle'>" +
-               "<div style='background:rgba(200,0,26,0.12);border:1px solid rgba(200,0,26,0.4);border-radius:8px;padding:10px 16px;text-align:center'>" +
-               "<p style='margin:0;color:#E8192C;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase'>NOTA DE VENTA</p>" +
-               "<p style='margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:13px;font-weight:700;font-family:\"Courier New\",monospace'>" + refNum + "</p>" +
+               "<div style='background:rgba(225,20,40,0.1);border:1px solid rgba(225,20,40,0.3);border-radius:8px;padding:8px 12px;text-align:center'>" +
+               "<p style='margin:0;color:#E11428;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase'>COMPROBANTE</p>" +
+               "<p style='margin:4px 0 0;color:#fff;font-size:14px;font-weight:700;font-family:\"Courier New\",monospace'>" + refNum + "</p>" +
                "</div></td></tr></table></td></tr>" +
-
-               /* Saludo */
-               "<tr><td style='padding:26px 36px 12px;border-bottom:1px solid #F1F1F4'>" +
-               "<p style='margin:0 0 6px;font-size:20px;font-weight:900;color:#111'>¡Gracias por su confianza!</p>" +
-               "<p style='margin:0;font-size:14px;color:#555;line-height:1.65'>Estimado/a <strong style='color:#111'>" + nombre + "</strong>, a continuación su comprobante de servicio realizado en Gorila Motos.</p>" +
-               "</td></tr>" +
-
-               /* Info vehículo */
-               "<tr><td style='padding:20px 36px 0'>" +
-               "<p style='margin:0 0 10px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9CA3AF'>Datos del servicio</p>" +
-               "<table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;border:1px solid #E5E7EB'>" +
-               "<tr style='background:#F8F9FA'>" +
-               "<td style='padding:10px 14px;font-size:11px;font-weight:700;color:#6B7280;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #E5E7EB;width:38%'>Placa / Vehículo</td>" +
-               "<td style='padding:10px 14px;font-size:15px;font-weight:700;color:#111;border-bottom:1px solid #E5E7EB;font-family:\"Courier New\",monospace'>" + placa + "</td>" +
+               /* Saludo y Detalles */
+               "<tr><td class='bpad' style='padding:0 36px 24px'>" +
+               "<p style='margin:0 0 8px;font-size:22px;font-weight:800;color:#fff'>Comprobante de Servicio</p>" +
+               "<p style='margin:0 0 24px;font-size:14px;color:#8B8FA8;line-height:1.6'>Estimado/a <strong style='color:#fff'>" + nombre + "</strong>, aquí tienes el detalle de los servicios realizados a tu vehículo.</p>" +
+               "<table width='100%' cellpadding='0' cellspacing='0' style='background:#15151D;border-radius:8px;border:1px solid #1F1F2E'>" +
+               "<tr>" +
+               "<td style='padding:16px;border-bottom:1px solid #1F1F2E;width:50%'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#8B8FA8'>Placa</p><p style='margin:0;font-size:15px;font-weight:700;color:#fff;font-family:\"Courier New\",monospace'>" + placa + "</p></td>" +
+               "<td style='padding:16px;border-bottom:1px solid #1F1F2E;border-left:1px solid #1F1F2E;width:50%'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#8B8FA8'>Fecha</p><p style='margin:0;font-size:14px;color:#EAEAEA'>" + fecha + "</p></td>" +
                "</tr><tr>" +
-               "<td style='padding:10px 14px;font-size:11px;font-weight:700;color:#6B7280;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #E5E7EB;background:#FAFAFA'>Tipo de servicio</td>" +
-               "<td style='padding:10px 14px;font-size:14px;font-weight:700;color:#111;border-bottom:1px solid #E5E7EB'>" + tipoServicio + "</td>" +
-               "</tr><tr style='background:#F8F9FA'>" +
-               "<td style='padding:10px 14px;font-size:11px;font-weight:700;color:#6B7280;letter-spacing:1px;text-transform:uppercase'>Fecha</td>" +
-               "<td style='padding:10px 14px;font-size:14px;color:#374151'>" + fecha + "</td>" +
+               "<td colspan='2' style='padding:16px'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#8B8FA8'>Servicio Realizado</p><p style='margin:0;font-size:15px;font-weight:600;color:#fff'>" + tipoServicio + "</p></td>" +
                "</tr></table></td></tr>" +
-
-               /* Tabla de detalles (cuando hay ítems) */
-               (tieneDetalles ? (
-               "<tr><td style='padding:4px 36px 0'>" +
-               "<table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;border:1px solid #E5E7EB;border-top:none'>" +
-               filasHtml.toString() +
-               "</table></td></tr>"
-               ) : "") +
-
+               /* Tabla de items */
+               (tieneDetalles ? ("<tr><td style='padding:0 36px 24px'><table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse'>" + filasHtml.toString().replaceAll("color:#111", "color:#fff").replaceAll("color:#374151", "color:#EAEAEA").replaceAll("border-bottom:1px solid #E5E7EB", "border-bottom:1px solid #1F1F2E").replaceAll("border-bottom:1px solid #F3F4F6", "border-bottom:1px solid #1F1F2E").replaceAll("background:#F3F4F6", "background:#15151D").replaceAll("background:#EFF6FF", "background:#131B2A").replaceAll("background:#FFFBEB", "background:#1F180B") + "</table></td></tr>") : "") +
                /* Total */
-               "<tr><td style='padding:20px 36px'>" +
-               "<div style='background:linear-gradient(135deg,#C8001A 0%,#8B0000 100%);border-radius:10px;padding:18px 24px'>" +
+               "<tr><td style='padding:0 36px 32px'>" +
+               "<div style='background:linear-gradient(135deg, #E11428 0%, #8B0000 100%);border-radius:12px;padding:24px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
-               "<td><p style='margin:0;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65)'>Total del servicio</p>" +
-               "<p class='total-amount' style='margin:6px 0 0;font-family:Georgia,serif;font-size:30px;font-weight:700;color:#fff;letter-spacing:-0.5px'>" + costoStr + "</p></td>" +
-               "<td align='right'><p style='margin:0;font-size:11px;color:rgba(255,255,255,0.5)'>" + fecha + "</p>" +
-               "<p style='margin:8px 0 0;font-family:\"Courier New\",monospace;font-size:11px;color:rgba(255,255,255,0.35)'>" + refNum + "</p></td>" +
+               "<td><p style='margin:0;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7)'>Total Abonado</p>" +
+               "<p class='total-amount' style='margin:4px 0 0;font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px'>" + costoStr + "</p></td>" +
+               "<td align='right' style='vertical-align:bottom'><p style='margin:0;font-size:12px;color:rgba(255,255,255,0.8);font-weight:600'>¡Gracias por elegirnos!</p></td>" +
                "</tr></table></div></td></tr>" +
-
-               /* Nota */
-               "<tr><td style='padding:0 36px 28px'>" +
-               "<div style='background:#FFFBF2;border:1px solid #FDE68A;border-radius:8px;padding:14px 18px'>" +
-               "<p style='margin:0;font-size:12px;color:#78350F;line-height:1.65'>" +
-               "Conserve este correo como comprobante oficial. Para consultas comuníquese a " +
-               "<a href='mailto:gorilamotos2026@gmail.com' style='color:#C8001A;font-weight:700'>gorilamotos2026@gmail.com</a> " +
-               "o visítenos en nuestro taller en Cuenca, Ecuador.</p></div></td></tr>" +
-
                /* Footer */
-               "<tr><td class='fpad' style='background:#F8F9FA;border-top:1px solid #E5E7EB;padding:18px 36px'>" +
+               "<tr><td class='fpad' style='background:#09090D;padding:24px 36px;border-top:1px solid #1F1F2E'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
-               "<td><p style='margin:0;font-size:10px;color:#9CA3AF'>© " + yr + " Gorila Motos S.A.S. &nbsp;·&nbsp; Cuenca, Ecuador</p>" +
-               "<p style='margin:3px 0 0;font-size:10px'><a href='https://gmotors-frontend.vercel.app' style='color:#C8001A;text-decoration:none'>gmotors-frontend.vercel.app</a></p></td>" +
-               "<td align='right'><img src='" + LOGO + "' alt='' width='36' height='36' style='border-radius:8px;border:1px solid rgba(0,0,0,0.1)' /></td>" +
+               "<td><p style='margin:0;font-size:11px;color:#8B8FA8'>© " + yr + " Gorila Motos. Cuenca, Ecuador.</p>" +
+               "<p style='margin:4px 0 0;font-size:11px'><a href='https://gmotors-frontend.vercel.app' style='color:#E11428;text-decoration:none'>gmotors-frontend.vercel.app</a></p></td>" +
+               "<td align='right'><img src='" + LOGO + "' alt='' width='32' height='32' style='border-radius:8px;opacity:0.5' /></td>" +
                "</tr></table></td></tr>" +
-
-               /* Banda roja inferior */
-               "<tr><td style='background:#C8001A;height:4px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
-
-               "</table></td></tr></table>" +
-               "</body></html>";
+               "</table></td></tr></table></body></html>";
     }
 
     private String fila(String label, String value) {

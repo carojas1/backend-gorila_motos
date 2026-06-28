@@ -52,7 +52,12 @@ public class MotoService {
                 MantenimientoRealizado inicial = new MantenimientoRealizado();
                 inicial.setIdMoto(nuevaMoto.getIdMoto());
                 inicial.setTipo(p.getTipoMantenimiento());
-                inicial.setKmServicio(nuevaMoto.getKilometraje());
+                // Extrapolar el último cambio teórico basado en el intervalo para no empezar desde 0% de desgaste irreal
+                int kmServicio = nuevaMoto.getKilometraje();
+                if (p.getIntervaloKm() != null && p.getIntervaloKm() > 0) {
+                    kmServicio = (nuevaMoto.getKilometraje() / p.getIntervaloKm()) * p.getIntervaloKm();
+                }
+                inicial.setKmServicio(kmServicio);
                 inicial.setFecha(LocalDate.now());
                 mantenimientoRealizadoRepository.save(inicial);
             }
