@@ -417,7 +417,7 @@ public class ResendEmailService {
                "<tr><td class='hpad' style='background:#0D0D12;padding:28px 36px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td style='vertical-align:middle'>" +
-               "<img src='https://gorila-motos.vercel.app/brand/gorila-logo.png' alt='Gorila Motos' width='54' height='54' style='display:block;border-radius:12px;border:2px solid rgba(200,0,26,0.5)' />" +
+               "<img src='https://backend-gorila-motos.onrender.com/images/gorila-logo.png' alt='Gorila Motos' width='54' height='54' style='display:block;border-radius:12px;border:2px solid rgba(200,0,26,0.5)' />" +
                "</td>" +
                "<td style='vertical-align:middle;padding-left:14px'>" +
                "<p style='margin:0;color:#fff;font-size:22px;font-weight:700;font-family:Georgia,serif;letter-spacing:-0.3px'>Gorila <span style='color:#E8192C'>Motos</span></p>" +
