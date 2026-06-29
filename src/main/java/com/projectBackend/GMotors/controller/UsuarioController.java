@@ -80,8 +80,12 @@ public class UsuarioController {
             Usuario usuarioActualizadoDB = usuarioService.actualizarUsuario(id, usuarioActualizado);
             return ResponseEntity.ok(usuarioActualizadoDB); // 200 + datos actualizados
         } catch (RuntimeException e) {
-            // Captura la excepción de "no encontrado" y devuelve 404
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            // Devuelve 400 con el mensaje de error para poder depurar
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
