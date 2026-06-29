@@ -28,12 +28,6 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Permitir preflight CORS
-        if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
-
         String path = request.getRequestURI();
 
         // Rutas públicas — sin verificación de token
