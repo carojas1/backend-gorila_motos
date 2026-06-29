@@ -17,6 +17,9 @@ public class SupabaseStorageService {
     @Value("${supabase.service-role-key}")
     private String serviceRoleKey;
 
+    @Value("${supabase.anon-key:}")
+    private String anonKey;
+
     @Value("${supabase.storage.bucket}")
     private String bucketName;
 
@@ -31,6 +34,10 @@ public class SupabaseStorageService {
             return supabaseUrl.substring(0, supabaseUrl.length() - 1);
         }
         return supabaseUrl;
+    }
+
+    private String getAuthKey() {
+        return (serviceRoleKey != null && !serviceRoleKey.trim().isEmpty()) ? serviceRoleKey : anonKey;
     }
 
     public String subirImagenUsuario(MultipartFile file) {
@@ -52,20 +59,21 @@ public class SupabaseStorageService {
      */
     private void ensureBucket() {
         try {
+            String authKey = getAuthKey();
             // ¿Existe ya?
             Request get = new Request.Builder()
                     .url(getBaseUrl() + "/storage/v1/bucket/" + bucketName)
-                    .header("Authorization", "Bearer " + serviceRoleKey)
-                    .header("apikey", serviceRoleKey)
+                    .header("Authorization", "Bearer " + authKey)
+                    .header("apikey", authKey)
                     .get().build();
             try (Response r = httpClient.newCall(get).execute()) {
                 if (r.isSuccessful()) {
-                    // Existe — garantizar que sea público (idempotente)
+                    // Ya existe, asegurarse que sea public (patch)
                     String patchJson = "{\"public\":true,\"file_size_limit\":10485760}";
                     Request patch = new Request.Builder()
                             .url(getBaseUrl() + "/storage/v1/bucket/" + bucketName)
-                            .header("Authorization", "Bearer " + serviceRoleKey)
-                            .header("apikey", serviceRoleKey)
+                            .header("Authorization", "Bearer " + authKey)
+                            .header("apikey", authKey)
                             .put(RequestBody.create(patchJson, MediaType.parse("application/json")))
                             .build();
                     try (Response pr = httpClient.newCall(patch).execute()) {
@@ -79,8 +87,8 @@ public class SupabaseStorageService {
                     + "\"file_size_limit\":10485760}";
             Request create = new Request.Builder()
                     .url(getBaseUrl() + "/storage/v1/bucket")
-                    .header("Authorization", "Bearer " + serviceRoleKey)
-                    .header("apikey", serviceRoleKey)
+                    .header("Authorization", "Bearer " + authKey)
+                    .header("apikey", authKey)
                     .post(RequestBody.create(json, MediaType.parse("application/json")))
                     .build();
             try (Response r = httpClient.newCall(create).execute()) {
@@ -118,6 +126,7 @@ public class SupabaseStorageService {
                     getBaseUrl(), bucketName, ruta
             );
 
+            String authKey = getAuthKey();
             String contentType = (file.getContentType() != null && !file.getContentType().isBlank())
                     ? file.getContentType() : "application/octet-stream";
             System.out.println("[SUPABASE] Subiendo a: " + uploadUrl);
@@ -126,8 +135,8 @@ public class SupabaseStorageService {
             Request request = new Request.Builder()
                     .url(uploadUrl)
                     .post(RequestBody.create(fileContent, MediaType.parse(contentType)))
-                    .header("Authorization", "Bearer " + serviceRoleKey)
-                    .header("apikey", serviceRoleKey)
+                    .header("Authorization", "Bearer " + authKey)
+                    .header("apikey", authKey)
                     .header("x-upsert", "true")
                     .build();
 
@@ -153,7 +162,8 @@ public class SupabaseStorageService {
         }
     }
 
-    public void eliminarImagen(String urlImagen) {
+    public void borrarImagenUsuario(String urlImagen) {
+        if (urlImagen == null || urlImagen.isBlank()) return;
         try {
             String ruta = extraerRutaDeUrl(urlImagen);
 
@@ -162,11 +172,12 @@ public class SupabaseStorageService {
                     getBaseUrl(), bucketName, ruta
             );
 
+            String authKey = getAuthKey();
             Request request = new Request.Builder()
                     .url(deleteUrl)
                     .delete()
-                    .header("Authorization", "Bearer " + serviceRoleKey)
-                    .header("apikey", serviceRoleKey)
+                    .header("Authorization", "Bearer " + authKey)
+                    .header("apikey", authKey)
                     .build();
 
             try (Response response = httpClient.newCall(request).execute()) {
@@ -180,23 +191,29 @@ public class SupabaseStorageService {
 
         } catch (IOException e) {
             System.err.println(
-                    "Error al eliminar imagen. Posible problema de conexión con Supabase. " +
-                    "Contacte con un administrador. Detalle: " + e.getMessage()
+                    "Error de conexión al intentar eliminar imagen. Detalle técnico: " + e.getMessage()
             );
         }
     }
 
-    // ============== MÉTODOS PRIVADOS ==============
+    public void borrarImagenProducto(String urlImagen) {
+        // En este proyecto es la misma lógica para cualquier ruta
+        borrarImagenUsuario(urlImagen);
+    }
 
-    private String generarNombreArchivo(String nombreOriginal) {
-        if (nombreOriginal == null || nombreOriginal.isEmpty()) {
-            return UUID.randomUUID().toString() + ".jpg";
+    public void borrarImagenMoto(String urlImagen) {
+        borrarImagenUsuario(urlImagen);
+    }
+
+    private String extraerRutaDeUrl(String url) {
+        // Ejemplo url: https://xxx.supabase.co/storage/v1/object/public/motos/usuarios/perfil/123.jpg
+        // Debe retornar "usuarios/perfil/123.jpg"
+        String token = "/object/public/" + bucketName + "/";
+        int idx = url.indexOf(token);
+        if (idx != -1) {
+            return url.substring(idx + token.length());
         }
-
-        int lastDotIndex = nombreOriginal.lastIndexOf(".");
-        String extension = lastDotIndex > 0 ? nombreOriginal.substring(lastDotIndex) : ".jpg";
-
-        return UUID.randomUUID().toString() + extension;
+        return url; // Fallback
     }
 
     private String construirUrlPublica(String ruta) {
@@ -204,17 +221,5 @@ public class SupabaseStorageService {
                 "%s/storage/v1/object/public/%s/%s",
                 getBaseUrl(), bucketName, ruta
         );
-    }
-
-    private String extraerRutaDeUrl(String url) {
-        try {
-            String[] partes = url.split("/public/");
-            if (partes.length > 1) {
-                return partes[1].substring(bucketName.length() + 1);
-            }
-        } catch (Exception e) {
-            System.err.println("Error al extraer ruta de URL: " + e.getMessage());
-        }
-        return url;
     }
 }
