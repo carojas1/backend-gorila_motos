@@ -162,6 +162,10 @@ public class SupabaseStorageService {
         }
     }
 
+    public void eliminarImagen(String urlImagen) {
+        borrarImagenUsuario(urlImagen);
+    }
+
     public void borrarImagenUsuario(String urlImagen) {
         if (urlImagen == null || urlImagen.isBlank()) return;
         try {
