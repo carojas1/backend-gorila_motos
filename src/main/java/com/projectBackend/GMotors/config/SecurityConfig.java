@@ -73,6 +73,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/motos/ocr/placa").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/motos/ocr/buscar-dueno").permitAll()
 
+                .requestMatchers(HttpMethod.GET,    "/api/productos/**").permitAll()
+                .requestMatchers(HttpMethod.GET,    "/api/productos").permitAll()
+
                 .requestMatchers(HttpMethod.GET,    "/api/rutas/usuario/**").permitAll()
                 .requestMatchers(HttpMethod.GET,    "/api/rutas/**").permitAll()
                 .requestMatchers(HttpMethod.POST,   "/api/rutas").permitAll()

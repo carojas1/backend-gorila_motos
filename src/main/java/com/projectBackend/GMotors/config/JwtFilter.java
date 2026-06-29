@@ -47,6 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
         	    (path.equals("/api/motos/ocr/placa") && request.getMethod().equals("POST")) ||
         	    (path.equals("/api/usuarios/upload") && request.getMethod().equals("POST")) ||
         	    (path.equals("/api/motos/upload") && request.getMethod().equals("POST")) ||
+        	    (path.startsWith("/api/productos") && request.getMethod().equals("GET")) ||
         	    (path.equals("/api/productos/upload") && request.getMethod().equals("POST")) ||
         	    (path.startsWith("/api/usuarios/recuperacion"))  ||
                 (path.equals("/api/quick-accounts/create") && request.getMethod().equals("POST"))) {
