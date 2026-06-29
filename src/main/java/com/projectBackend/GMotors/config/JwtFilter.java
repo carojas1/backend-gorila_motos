@@ -29,6 +29,15 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        // ── Preflight CORS (OPTIONS) — siempre pasar, sin token ─────────────
+        // El navegador/APK envía OPTIONS ANTES de cualquier POST/PUT/DELETE.
+        // Si lo bloqueamos aquí, NINGÚN formulario funciona (register, login, etc.)
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         // Rutas públicas — sin verificación de token
         if (path.startsWith("/api/health") ||
@@ -37,14 +46,14 @@ public class JwtFilter extends OncePerRequestFilter {
                 // Healthcheck de Render — crítico para que el servicio no se marque como caído
                 path.startsWith("/actuator/") || path.equals("/actuator") ||
         	    path.equals("/api/usuarios/login") ||
-        	    (path.equals("/api/usuarios") && request.getMethod().equals("POST")) ||
-        	    (path.equals("/api/motos/ocr/placa") && request.getMethod().equals("POST")) ||
-        	    (path.equals("/api/usuarios/upload") && request.getMethod().equals("POST")) ||
-        	    (path.equals("/api/motos/upload") && request.getMethod().equals("POST")) ||
-        	    (path.startsWith("/api/productos") && request.getMethod().equals("GET")) ||
-        	    (path.equals("/api/productos/upload") && request.getMethod().equals("POST")) ||
+        	    (path.equals("/api/usuarios") && method.equals("POST")) ||
+        	    (path.equals("/api/motos/ocr/placa") && method.equals("POST")) ||
+        	    (path.equals("/api/usuarios/upload") && method.equals("POST")) ||
+        	    (path.equals("/api/motos/upload") && method.equals("POST")) ||
+        	    (path.startsWith("/api/productos") && method.equals("GET")) ||
+        	    (path.equals("/api/productos/upload") && method.equals("POST")) ||
         	    (path.startsWith("/api/usuarios/recuperacion"))  ||
-                (path.equals("/api/quick-accounts/create") && request.getMethod().equals("POST"))) {
+                (path.equals("/api/quick-accounts/create") && method.equals("POST"))) {
                 filterChain.doFilter(request, response);
                 return;
         	}
