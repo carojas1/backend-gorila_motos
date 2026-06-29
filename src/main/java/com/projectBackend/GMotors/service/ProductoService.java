@@ -41,29 +41,44 @@ public class ProductoService {
         Producto existing = productoRepository.findById(id).orElse(null);
 
         if (existing != null) {
-            existing.setNombre(producto.getNombre());
-            existing.setCosto(producto.getCosto());
-            existing.setDescripcion(producto.getDescripcion());
-            existing.setId_categoria(producto.getId_categoria());
-            existing.setStock(producto.getStock());
-            existing.setCodigo_personal(producto.getCodigo_personal());
-            existing.setCodigo_proveedor(producto.getCodigo_proveedor());
-            if (producto.getruta_imagenproductos() != null) {
-                // Si la imagen cambió, eliminar la anterior
-                if (existing.getruta_imagenproductos() != null &&
-                    !existing.getruta_imagenproductos().equals(producto.getruta_imagenproductos())) {
-                    
-                    try {
-                        supabaseStorageService.eliminarImagen(existing.getruta_imagenproductos());
-                    } catch (Exception e) {
-                        //System.err.println("Advertencia: No se pudo eliminar imagen anterior: " + e.getMessage());
-                        // No interrumpir el flujo si falla la eliminación
-                    }
-                }
-                existing.setruta_imagenproductos(producto.getruta_imagenproductos());
+            if (producto.getNombre() != null) {
+                existing.setNombre(producto.getNombre());
+            }
+            if (producto.getCosto() != null) {
+                existing.setCosto(producto.getCosto());
+            }
+            if (producto.getDescripcion() != null) {
+                existing.setDescripcion(producto.getDescripcion());
+            }
+            if (producto.getId_categoria() != null) {
+                existing.setId_categoria(producto.getId_categoria());
+            }
+            if (producto.getStock() != null) {
+                existing.setStock(producto.getStock());
+            }
+            if (producto.getCodigo_personal() != null) {
+                existing.setCodigo_personal(producto.getCodigo_personal());
+            }
+            if (producto.getCodigo_proveedor() != null) {
+                existing.setCodigo_proveedor(producto.getCodigo_proveedor());
             }
             
-            existing.setPvp(producto.getPvp());
+            String nuevaFoto = producto.getruta_imagenproductos();
+            if (nuevaFoto != null && !nuevaFoto.isBlank()) {
+                String anterior = existing.getruta_imagenproductos();
+                if (anterior != null && anterior.startsWith("http") && !anterior.equals(nuevaFoto)) {
+                    try {
+                        supabaseStorageService.eliminarImagen(anterior);
+                    } catch (Exception e) {
+                        // Ignorar si no se puede eliminar la anterior
+                    }
+                }
+                existing.setruta_imagenproductos(nuevaFoto);
+            }
+            
+            if (producto.getPvp() != null) {
+                existing.setPvp(producto.getPvp());
+            }
 
             // IMPORTANTE:
             existing.setFecha_modificacion(LocalDate.now());
