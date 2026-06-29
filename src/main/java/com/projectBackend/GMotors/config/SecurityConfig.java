@@ -68,6 +68,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
                 .requestMatchers("/images/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/usuarios/upload").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/motos/upload").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/productos/upload").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/motos/ocr/placa").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/motos/ocr/buscar-dueno").permitAll()
 
@@ -87,8 +89,6 @@ public class SecurityConfig {
                 // Motos: reglas explícitas por método para evitar ambigüedad con PathPatternParser
                 .requestMatchers(HttpMethod.GET,    "/api/motos/**").authenticated()
                 .requestMatchers(HttpMethod.GET,    "/api/motos").authenticated()
-                .requestMatchers(HttpMethod.POST,   "/api/motos/upload").authenticated()
-                .requestMatchers(HttpMethod.POST,   "/api/productos/upload").authenticated()
                 .requestMatchers(HttpMethod.POST,   "/api/motos").authenticated()
                 .requestMatchers(HttpMethod.PUT,    "/api/motos/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/motos/**").authenticated()
