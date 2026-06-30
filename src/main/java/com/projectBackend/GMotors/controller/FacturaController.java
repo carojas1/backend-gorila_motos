@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/facturas")
+@RequestMapping("/api/facturas")
 public class FacturaController {
 
     private final FacturaService facturaService;
@@ -22,6 +22,12 @@ public class FacturaController {
     // ================= CREAR FACTURA =================
     // LOGICA MANEJADA EN REGISTROCONTROLLER
     
+    // ================= OBTENER TODAS =================
+    @GetMapping
+    public ResponseEntity<List<Factura>> listarTodas() {
+        return ResponseEntity.ok(facturaService.listarTodas());
+    }
+
     // ================= OBTENER FACTURA POR ID =================
 	//Logica descontinuad, si se necesita se debe de implementar en Factura service
 

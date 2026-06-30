@@ -36,6 +36,10 @@ public class FacturaService {
         this.productoRepository = productoRepository;
     }
 
+    public List<Factura> listarTodas() {
+        return facturaRepository.findAll();
+    }
+
     // =====================================================================
     // CREAR FACTURA
     // =====================================================================

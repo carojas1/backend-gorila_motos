@@ -150,7 +150,7 @@ public class ResendEmailService {
        ══════════════════════════════════════════════ */
     public boolean enviarEmailRecuperacion(String correo, String token, String nombre, String plataforma) {
         String enlace = "web".equalsIgnoreCase(plataforma)
-            ? "https://gorila-motos.vercel.app/restablecer?token=" + token
+            ? "https://pagina-web-gorila-motos.vercel.app/restablecer?token=" + token
             : "gmotors://reset-password?token=" + token;
 
         String html = htmlBase(
@@ -194,7 +194,7 @@ public class ResendEmailService {
             "</strong> (placa <strong>" + placa + "</strong>) tiene programado un cambio de aceite en aproximadamente <strong>" +
             kmRestantes + " km</strong>.",
             "Ver detalles en el portal",
-            "https://gorila-motos.vercel.app/mi-moto",
+            "https://pagina-web-gorila-motos.vercel.app/mi-moto",
             "Agenda tu cita con anticipación para evitar daños en el motor."
         );
         return enviar(correoCliente, "Mantenimiento próximo — " + placa + " · Gorila Motos", html);
@@ -215,7 +215,7 @@ public class ResendEmailService {
             "<strong style='color:#E11428'>" + descripcion + "</strong><br><br>" +
             "Llevar tu moto al taller lo antes posible previene daños mayores y reduce costos.",
             "Agendar mantenimiento",
-            "https://gorila-motos.vercel.app/mi-moto",
+            "https://pagina-web-gorila-motos.vercel.app/mi-moto",
             "Recomendación técnica basada en el cilindraje y condiciones de rodadura ecuatorianas."
         );
         return enviar(correo, "⚠️ " + tipoLabel + " vencido — " + placa + " · Gorila Motos", html);
@@ -237,7 +237,7 @@ public class ResendEmailService {
             "<strong>" + descripcion + "</strong><br><br>" +
             "El cambio estará vencido al alcanzar los <strong>" + String.format("%,d", proximoKm) + " km</strong>.",
             "Ver estado de mi moto",
-            "https://gorila-motos.vercel.app/mi-moto",
+            "https://pagina-web-gorila-motos.vercel.app/mi-moto",
             "Agenda con anticipación para evitar esperas y proteger tu motor."
         );
         return enviar(correo, "Próximo: " + tipoLabel + " — " + placa + " · Gorila Motos", html);
@@ -249,7 +249,7 @@ public class ResendEmailService {
        la bandeja ni el límite del proveedor de correo.
        ══════════════════════════════════════════════ */
     /** Número de WhatsApp que recibe las citas (EN PRUEBA — cambiar al de Gorila Motos). */
-    private static final String WHATSAPP_CITAS = "593989443292";
+    private static final String WHATSAPP_CITAS = "593980834367";
 
     public static class ItemMantenimiento {
         public final String tipo;
@@ -314,36 +314,51 @@ public class ResendEmailService {
                  .append(estadoTxt).append("</span></td></tr>");
         }
 
-        String resumen = vencidos > 0
-            ? vencidos + " componente(s) por cambiar" + (proximos > 0 ? " y " + proximos + " por vencer." : ".")
-            : (proximos > 0 ? proximos + " componente(s) próximos a vencer." : "Todo en orden.");
-
-        String cuerpo =
-            "Hola <strong>" + nombre + "</strong>, este es el estado técnico de tu moto <strong>" + marca + " " + modelo +
-            "</strong> (placa <strong>" + placa + "</strong>) con <strong>" + String.format("%,d", kmActual) +
-            " km</strong>:<br><br>" +
-            "<span style='color:" + acento + ";font-weight:800;font-size:15px'>" + resumen + "</span>" +
-            "<table style='width:100%;border-collapse:collapse;margin:12px 0 4px'>" +
-            "<tr><th style='text-align:left;padding:8px 12px;font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Componente</th>" +
-            "<th style='text-align:left;padding:8px 12px;font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Desgaste</th>" +
-            "<th style='text-align:right;padding:8px 12px;font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eee'>Estado</th></tr>" +
-            filas + "</table>";
-
-        // Botón "Agendar cita" → WhatsApp con mensaje prellenado
         String waMsg = java.net.URLEncoder.encode(
             "¡Hola Gorila Motos! Quiero agendar una cita para mi moto " + marca + " " + modelo +
             " (placa " + placa + "). Kilometraje: " + String.format("%,d", kmActual) + " km.",
             java.nio.charset.StandardCharsets.UTF_8);
-        String waLink = "https://wa.me/" + WHATSAPP_CITAS + "?text=" + waMsg;
+        String waLink = "https://wa.me/593980834367?text=" + waMsg;
 
-        String html = htmlBase(
-            (vencidos > 0 ? "⚠️ " : "") + "Tu moto necesita mantenimiento",
-            cuerpo,
-            "Agendar cita por WhatsApp",
-            waLink,
-            "Agenda tu cita pronto para evitar daños mayores y costos más altos. — Gorila Motos"
-        );
-        String asunto = (vencidos > 0 ? "⚠️ " : "") + "Mantenimiento de tu moto " + placa + " — Gorila Motos";
+        String html = "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>" +
+               "<meta name='viewport' content='width=device-width,initial-scale=1'>" +
+               "<style>" +
+               "body{margin:0;padding:0;background:#050505;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#fff}" +
+               ".wrap{max-width:600px;margin:0 auto;background:#0A0A0E;border:1px solid #1A1A24;border-radius:12px;overflow:hidden;box-shadow:0 0 30px rgba(225,20,40,0.15)}" +
+               ".header{background:linear-gradient(135deg, #0C0C10 0%, #15151D 100%);padding:30px 40px;border-bottom:1px solid rgba(225,20,40,0.2)}" +
+               ".content{padding:40px}" +
+               ".btn{display:inline-block;background:linear-gradient(90deg, #E11428 0%, #B90D1E 100%);color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:1px;box-shadow:0 4px 15px rgba(225,20,40,0.3)}" +
+               ".neon-text{color:#E11428;text-shadow:0 0 10px rgba(225,20,40,0.4)}" +
+               "</style></head><body>" +
+               "<div style='padding:40px 16px'>" +
+               "<div class='wrap'>" +
+               "<div class='header'>" +
+               "<h1 style='margin:0;font-size:28px;font-weight:900;letter-spacing:-1px'>GORILA <span class='neon-text'>MOTOS</span></h1>" +
+               "<p style='margin:5px 0 0;color:#8B8FA8;font-size:12px;letter-spacing:3px;text-transform:uppercase'>Alerta de Mantenimiento</p>" +
+               "</div>" +
+               "<div class='content'>" +
+               "<h2 style='margin:0 0 20px;font-size:22px;font-weight:800'>" + (vencidos > 0 ? "⚠️ " : "") + "Tu moto necesita mantenimiento" + "</h2>" +
+               "<p style='color:#A1A5B5;font-size:16px;line-height:1.6;margin:0 0 25px'>" +
+               "Saludos <strong>" + nombre + "</strong>, el sistema de diagnóstico ha detectado que tu <strong>" + marca + " " + modelo + "</strong> " +
+               "(<span style='color:#fff;background:#1A1A24;padding:4px 8px;border-radius:4px;font-family:monospace'>" + placa + "</span>) " +
+               "con <strong>" + String.format("%,d", kmActual) + " km</strong> requiere atención técnica.</p>" +
+               "<div style='background:#111118;border:1px solid #1F1F2E;border-radius:10px;padding:20px;margin-bottom:30px'>" +
+               "<p style='margin:0 0 15px;color:#EAEAEA;font-weight:700'>" + resumen + "</p>" +
+               "<table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse'>" +
+               "<tr><th style='text-align:left;padding:10px;font-size:11px;color:#6C7086;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1F1F2E'>Componente</th>" +
+               "<th style='text-align:left;padding:10px;font-size:11px;color:#6C7086;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1F1F2E'>Desgaste</th>" +
+               "<th style='text-align:right;padding:10px;font-size:11px;color:#6C7086;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1F1F2E'>Estado</th></tr>" +
+               filas + "</table></div>" +
+               "<div style='text-align:center;margin:40px 0 20px'>" +
+               "<a href='" + waLink + "' class='btn'>Agendar Cita Ahora</a>" +
+               "</div>" +
+               "</div>" +
+               "<div style='background:#08080C;padding:25px 40px;text-align:center;border-top:1px solid #15151D'>" +
+               "<p style='margin:0;color:#666;font-size:12px'>© " + java.time.Year.now().getValue() + " Gorila Motos · Innovación en Movimiento</p>" +
+               "<p style='margin:8px 0 0;font-size:11px'><a href='https://pagina-web-gorila-motos.vercel.app/' style='color:#E11428;text-decoration:none'>Visitar Portal</a></p>" +
+               "</div></div></div></body></html>";
+
+        String asunto = (vencidos > 0 ? "⚠️ " : "") + "Mantenimiento requerido: " + placa + " — Gorila Motos";
         return enviar(correo, asunto, html);
     }
 
@@ -547,7 +562,7 @@ public class ResendEmailService {
             (critico ? "⚠️ " : "") + titulo,
             cuerpo,
             "Agendar servicio",
-            "https://gorila-motos.vercel.app/mi-moto",
+            "https://pagina-web-gorila-motos.vercel.app/mi-moto",
             "Diagnóstico realizado por un técnico de Gorila Motos. Te recomendamos atender los puntos marcados en rojo lo antes posible."
         );
         String asunto = critico
@@ -618,7 +633,7 @@ public class ResendEmailService {
             "</td></tr>" +
             // CTA
             "<tr><td style='padding:0 36px 32px'>" +
-            "<a href='https://gorila-motos.vercel.app' style='display:inline-block;background:#E11428;color:#fff;" +
+            "<a href='https://pagina-web-gorila-motos.vercel.app' style='display:inline-block;background:#E11428;color:#fff;" +
             "text-decoration:none;padding:13px 28px;border-radius:10px;font-weight:700;font-size:14px'>Ver portal Gorila Motos →</a>" +
             "</td></tr>" +
             // Divider
@@ -627,7 +642,7 @@ public class ResendEmailService {
             "<tr><td style='background:#F9F9FB;padding:20px 36px'>" +
             "<p style='margin:0;color:#aaa;font-size:11px'>© " + java.time.Year.now().getValue() +
             " Gorila Motos · Cuenca, Ecuador · " +
-            "<a href='https://gorila-motos.vercel.app' style='color:#E11428;text-decoration:none'>gorila-motos.vercel.app</a></p>" +
+            "<a href='https://pagina-web-gorila-motos.vercel.app' style='color:#E11428;text-decoration:none'>gorila-motos.vercel.app</a></p>" +
             "<p style='margin:6px 0 0;color:#ccc;font-size:10px'>Para dejar de recibir estas comunicaciones, escríbenos a " +
             "<a href='mailto:gorilamotos2026@gmail.com' style='color:#E11428'>gorilamotos2026@gmail.com</a></p>" +
             "</td></tr>" +
@@ -644,7 +659,7 @@ public class ResendEmailService {
             "Prueba de SMTP — Gorila Motos",
             "Este correo confirma que el servidor de correo <strong>está funcionando correctamente</strong> desde Render.",
             "Ver portal",
-            "https://gorila-motos.vercel.app",
+            "https://pagina-web-gorila-motos.vercel.app",
             "Si recibiste este mensaje, el SMTP de Gmail está activo y configurado."
         );
         return enviar(destino, "✓ Prueba SMTP — Gorila Motos (" + java.time.LocalDateTime.now() + ")", html);
@@ -659,7 +674,7 @@ public class ResendEmailService {
             "Hola <strong>" + nombre + "</strong>, tu cuenta ha sido creada exitosamente. " +
             "Ya puedes registrar tus motos, ver tu historial de servicios y acumular puntos de fidelidad.",
             "Ir al portal",
-            "https://gorila-motos.vercel.app",
+            "https://pagina-web-gorila-motos.vercel.app",
             "Ante cualquier consulta, escríbenos a gorilamotos2026@gmail.com"
         );
         return enviar(correo, "Bienvenido a Gorila Motos 🏍️", html);
@@ -691,7 +706,7 @@ public class ResendEmailService {
                // Footer
                "<tr><td style='background:#F9F9FB;padding:20px 40px;border-top:1px solid #eee'>" +
                "<p style='margin:0;color:#aaa;font-size:11px'>© " + java.time.Year.now().getValue() +
-               " Gorila Motos · Cuenca, Ecuador · <a href='https://gorila-motos.vercel.app' style='color:#E11428'>gorila-motos.vercel.app</a></p>" +
+               " Gorila Motos · Cuenca, Ecuador · <a href='https://pagina-web-gorila-motos.vercel.app' style='color:#E11428'>gorila-motos.vercel.app</a></p>" +
                "</td></tr>" +
                "</table></td></tr></table></body></html>";
     }
