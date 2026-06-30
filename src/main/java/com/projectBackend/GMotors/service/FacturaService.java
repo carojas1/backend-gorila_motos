@@ -40,6 +40,14 @@ public class FacturaService {
         return facturaRepository.findAll();
     }
 
+    public Factura save(Factura factura) {
+        return facturaRepository.save(factura);
+    }
+
+    public DetalleFactura saveDetalle(DetalleFactura detalle) {
+        return detalleFacturaRepository.save(detalle);
+    }
+
     // =====================================================================
     // CREAR FACTURA
     // =====================================================================

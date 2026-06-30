@@ -20,7 +20,10 @@ public class FacturaController {
     }
 
     // ================= CREAR FACTURA =================
-    // LOGICA MANEJADA EN REGISTROCONTROLLER
+    @PostMapping
+    public ResponseEntity<Factura> crearFacturaRaw(@RequestBody Factura factura) {
+        return ResponseEntity.ok(facturaService.save(factura));
+    }
     
     // ================= OBTENER TODAS =================
     @GetMapping

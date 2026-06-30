@@ -47,6 +47,8 @@ public class UsuarioController {
             // 409 Conflict si el correo ya existe (más descriptivo que 500)
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
+    }
+
     // ✅ GET /api/usuarios/{id} → Obtener por ID (incluye roles frescos, sin contraseña)
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> obtenerPorId(@PathVariable Long id) {

@@ -17,6 +17,12 @@ public class DetalleFacturaController {
         this.facturaService = facturaService;
     }
 
+    // ================= CREAR DETALLE FACTURA =================
+    @PostMapping
+    public ResponseEntity<com.projectBackend.GMotors.model.DetalleFactura> crearDetalle(@RequestBody com.projectBackend.GMotors.model.DetalleFactura detalle) {
+        return ResponseEntity.ok(facturaService.saveDetalle(detalle));
+    }
+
     // ================= OBTENER DETALLES POR FACTURA =================
     // GET /api/detalles-factura/factura/{idFactura}
     // Devuelve mano de obra + repuestos (inventario y manual) de una factura.

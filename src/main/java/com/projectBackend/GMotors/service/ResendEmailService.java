@@ -53,7 +53,7 @@ public class ResendEmailService {
                   2) SendGrid (sin dominio, HTTPS, 100/día gratis)
                   3) Gmail SMTP (bloqueado en Render free tier)
                   4) Resend (requiere dominio propio verificado) */
-    private boolean enviar(String to, String subject, String html) {
+    public boolean enviar(String to, String subject, String html) {
         String senderEmail = (mailUsername != null && !mailUsername.isBlank())
                 ? mailUsername : "gorilamotos2026@gmail.com";
 
@@ -313,6 +313,10 @@ public class ResendEmailService {
                  .append(";background:").append(color).append("14;padding:4px 9px;border-radius:6px;white-space:nowrap'>")
                  .append(estadoTxt).append("</span></td></tr>");
         }
+
+        String resumen = vencidos > 0
+            ? vencidos + " componente(s) por cambiar" + (proximos > 0 ? " y " + proximos + " por vencer." : ".")
+            : (proximos > 0 ? proximos + " componente(s) próximos a vencer." : "Todo en orden.");
 
         String waMsg = java.net.URLEncoder.encode(
             "¡Hola Gorila Motos! Quiero agendar una cita para mi moto " + marca + " " + modelo +
