@@ -12,12 +12,15 @@ public class Factura {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_factura")
+    @com.fasterxml.jackson.annotation.JsonProperty("id_factura")
     private Long idFactura;
 
     @Column(name = "fecha_emision", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonProperty("fecha_emision")
     private LocalDate fechaEmision;
 
     @Column(name = "id_usuario", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonProperty("id_usuario")
     private Long idUsuario;
 
     @Column(
@@ -26,6 +29,7 @@ public class Factura {
         scale = 2,
         nullable = false
     )
+    @com.fasterxml.jackson.annotation.JsonProperty("costo_total")
     private BigDecimal costoTotal = BigDecimal.ZERO;
 
     

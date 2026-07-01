@@ -609,7 +609,8 @@ public class ResendEmailService {
        EMAIL 10 — Oferta / campaña de marketing masiva
        Enviada por el ADMIN desde la pantalla de Clientes
        ══════════════════════════════════════════════ */
-    public boolean enviarOfertaMarketing(String correo, String asunto, String mensajeHtml) {
+    public boolean enviarOfertaMarketing(String correo, String asunto, String mensaje) {
+        String formattedMensaje = mensaje != null ? mensaje.replace("\n", "<br>") : "";
         String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='" +
             "margin:0;padding:0;background:#F4F4F5;font-family:Arial,sans-serif'>" +
             "<table width='100%' cellpadding='0' cellspacing='0'><tr><td align='center' style='padding:40px 16px'>" +
@@ -633,7 +634,7 @@ public class ResendEmailService {
             "</td></tr>" +
             // Contenido del mensaje
             "<tr><td style='padding:0 36px 28px'>" +
-            "<div style='color:#444;font-size:15px;line-height:1.7'>" + mensajeHtml + "</div>" +
+            "<div style='color:#444;font-size:15px;line-height:1.7'>" + formattedMensaje + "</div>" +
             "</td></tr>" +
             // CTA
             "<tr><td style='padding:0 36px 32px'>" +

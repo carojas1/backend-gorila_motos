@@ -16,9 +16,11 @@ public class DetalleFactura {
     private Integer cantidad;
 
     @Column(name = "id_factura", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonProperty("id_factura")
     private Long idFactura;
 
-    @Column(nullable = true)
+    @Column(name = "id_producto", nullable = true)
+    @com.fasterxml.jackson.annotation.JsonProperty("id_producto")
     private Long idProducto;
 
     @Column(precision = 10, scale = 2, nullable = false)
