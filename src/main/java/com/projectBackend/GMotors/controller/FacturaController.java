@@ -32,7 +32,12 @@ public class FacturaController {
     }
 
     // ================= OBTENER FACTURA POR ID =================
-	//Logica descontinuad, si se necesita se debe de implementar en Factura service
+    @GetMapping("/{id}")
+    public ResponseEntity<Factura> obtenerPorId(@PathVariable Long id) {
+        return facturaService.obtenerFacturaPorId(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     // ================= OBTENER FACTURAS POR USUARIO =================
     //Logica descontinuad, si se necesita se debe de implementar en Factura service
