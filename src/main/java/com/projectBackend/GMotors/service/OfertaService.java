@@ -42,9 +42,10 @@ public class OfertaService {
         AtomicInteger enviados = new AtomicInteger(0);
         AtomicInteger errores  = new AtomicInteger(0);
 
+        String mensajeHtml = mensaje != null ? mensaje.replace("\n", "<br>") : "";
         for (String correo : destinatarios) {
             try {
-                boolean ok = resendEmailService.enviarOfertaMarketing(correo, asunto, mensaje);
+                boolean ok = resendEmailService.enviarOfertaMarketing(correo, asunto, mensajeHtml);
                 if (ok) enviados.incrementAndGet();
                 else    errores.incrementAndGet();
             } catch (Exception e) {
@@ -65,9 +66,10 @@ public class OfertaService {
             .distinct()
             .toList();
 
+        String mensajeHtml = mensaje != null ? mensaje.replace("\n", "<br>") : "";
         for (String correo : destinos) {
             try {
-                boolean ok = resendEmailService.enviarOfertaMarketing(correo, asunto, mensaje);
+                boolean ok = resendEmailService.enviarOfertaMarketing(correo, asunto, mensajeHtml);
                 if (ok) enviados.incrementAndGet();
                 else    errores.incrementAndGet();
             } catch (Exception e) {

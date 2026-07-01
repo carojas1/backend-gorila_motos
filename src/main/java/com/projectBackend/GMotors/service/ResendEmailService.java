@@ -719,15 +719,12 @@ public class ResendEmailService {
                                 double costoTotal, String fecha, Long idRegistro,
                                 List<DetalleFactura> detalles) {
         String costoStr = String.format("$%.2f", costoTotal);
-        // Número de orden ÚNICO: mismo formato que la web/impresión/APK (ordenNumero → ORD-000NNN)
         String refNum   = idRegistro != null ? String.format("ORD-%06d", idRegistro) : "ORD";
         int yr = java.time.Year.now().getValue();
-        String LOGO = "https://gmotors-frontend.vercel.app/brand/gorila-logo.png";
+        String LOGO = "https://backend-gorila-motos.onrender.com/images/gorila-logo.png";
 
-        // ── Generar filas de detalles (mano de obra + repuestos) ──
         StringBuilder filasHtml = new StringBuilder();
         if (detalles != null && !detalles.isEmpty()) {
-            // separar por tipo
             List<DetalleFactura> manoList = new java.util.ArrayList<>();
             List<DetalleFactura> repList  = new java.util.ArrayList<>();
             for (DetalleFactura d : detalles) {
@@ -740,13 +737,13 @@ public class ResendEmailService {
             }
             BigDecimal subtotalMano = BigDecimal.ZERO;
             BigDecimal subtotalRep  = BigDecimal.ZERO;
-            // header tabla
-            filasHtml.append("<tr><td style='padding:16px 14px 6px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9CA3AF' colspan='4'>Desglose del servicio</td></tr>");
-            filasHtml.append("<tr style='background:#15151D'>" +
-                "<td style='padding:9px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#8B8FA8;border-bottom:1px solid #1F1F2E'>Concepto</td>" +
-                "<td style='padding:9px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#8B8FA8;border-bottom:1px solid #1F1F2E;text-align:center'>Cant.</td>" +
-                "<td style='padding:9px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#8B8FA8;border-bottom:1px solid #1F1F2E;text-align:right'>Subtotal</td>" +
-                "<td style='padding:9px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#8B8FA8;border-bottom:1px solid #1F1F2E;text-align:center'>Tipo</td>" +
+            
+            filasHtml.append("<tr><td style='padding:16px 14px 6px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280' colspan='4'>Desglose del servicio</td></tr>");
+            filasHtml.append("<tr style='background:#F9FAFB'>" +
+                "<td style='padding:9px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#4B5563;border-bottom:1px solid #E5E7EB'>Concepto</td>" +
+                "<td style='padding:9px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#4B5563;border-bottom:1px solid #E5E7EB;text-align:center'>Cant.</td>" +
+                "<td style='padding:9px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#4B5563;border-bottom:1px solid #E5E7EB;text-align:right'>Subtotal</td>" +
+                "<td style='padding:9px 14px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#4B5563;border-bottom:1px solid #E5E7EB;text-align:center'>Tipo</td>" +
                 "</tr>");
 
             if (!manoList.isEmpty()) {
@@ -755,29 +752,29 @@ public class ResendEmailService {
                     String desc = d.getDescripcion() != null ? d.getDescripcion().replaceAll("^\\[MANO\\]\\s*", "") : "Servicio";
                     String sub  = d.getSubtotal() != null ? String.format("$%.2f", d.getSubtotal()) : "$0.00";
                     subtotalMano = subtotalMano.add(d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO);
-                    filasHtml.append("<tr style='border-bottom:1px solid #1F1F2E'>" +
-                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:#EAEAEA'>" + desc + "</td>" +
-                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:#EAEAEA;text-align:center'>" + (d.getCantidad() != null ? d.getCantidad() : 1) + "</td>" +
-                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#fff;text-align:right'>" + sub + "</td>" +
-                        "<td style='padding:10px 14px;text-align:center'><span style='font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#E11428;background:rgba(225,20,40,0.15);border-radius:4px;padding:2px 7px'>MO</span></td>" +
+                    filasHtml.append("<tr style='border-bottom:1px solid #F3F4F6'>" +
+                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:#1F2937'>" + desc + "</td>" +
+                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:#374151;text-align:center'>" + (d.getCantidad() != null ? d.getCantidad() : 1) + "</td>" +
+                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#111827;text-align:right'>" + sub + "</td>" +
+                        "<td style='padding:10px 14px;text-align:center'><span style='font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#E11428;background:rgba(225,20,40,0.1);border-radius:4px;padding:2px 7px'>MO</span></td>" +
                         "</tr>");
                 }
                 filasHtml.append("<tr style='background:rgba(225,20,40,0.03)'><td colspan='2' style='padding:8px 14px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#E11428'>Subtotal mano de obra</td><td colspan='2' style='padding:8px 14px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#E11428;text-align:right'>" + String.format("$%.2f", subtotalMano) + "</td></tr>");
             }
             if (!repList.isEmpty()) {
-                filasHtml.append("<tr><td colspan='4' style='padding:8px 14px 4px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#F59E0B;background:rgba(245,158,11,0.03)'>— Repuestos / Inventario</td></tr>");
+                filasHtml.append("<tr><td colspan='4' style='padding:8px 14px 4px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#D97706;background:rgba(245,158,11,0.05)'>— Repuestos / Inventario</td></tr>");
                 for (DetalleFactura d : repList) {
                     String desc = d.getDescripcion() != null ? d.getDescripcion().replaceAll("^\\[REP\\|[^\\]]+\\]\\s*", "") : "Repuesto";
                     String sub  = d.getSubtotal() != null ? String.format("$%.2f", d.getSubtotal()) : "$0.00";
                     subtotalRep = subtotalRep.add(d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO);
-                    filasHtml.append("<tr style='border-bottom:1px solid #1F1F2E'>" +
-                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:#EAEAEA'>" + desc + "</td>" +
-                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:#EAEAEA;text-align:center'>" + (d.getCantidad() != null ? d.getCantidad() : 1) + "</td>" +
-                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#fff;text-align:right'>" + sub + "</td>" +
-                        "<td style='padding:10px 14px;text-align:center'><span style='font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#F59E0B;background:rgba(245,158,11,0.15);border-radius:4px;padding:2px 7px'>REP</span></td>" +
+                    filasHtml.append("<tr style='border-bottom:1px solid #F3F4F6'>" +
+                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:#1F2937'>" + desc + "</td>" +
+                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;color:#374151;text-align:center'>" + (d.getCantidad() != null ? d.getCantidad() : 1) + "</td>" +
+                        "<td style='padding:10px 14px;font-family:Arial,sans-serif;font-size:13px;font-weight:600;color:#111827;text-align:right'>" + sub + "</td>" +
+                        "<td style='padding:10px 14px;text-align:center'><span style='font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:#D97706;background:rgba(245,158,11,0.1);border-radius:4px;padding:2px 7px'>REP</span></td>" +
                         "</tr>");
                 }
-                filasHtml.append("<tr style='background:rgba(245,158,11,0.03)'><td colspan='2' style='padding:8px 14px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#F59E0B'>Subtotal repuestos</td><td colspan='2' style='padding:8px 14px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#F59E0B;text-align:right'>" + String.format("$%.2f", subtotalRep) + "</td></tr>");
+                filasHtml.append("<tr style='background:rgba(245,158,11,0.05)'><td colspan='2' style='padding:8px 14px;font-family:Arial,sans-serif;font-size:12px;font-weight:700;color:#D97706'>Subtotal repuestos</td><td colspan='2' style='padding:8px 14px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:#D97706;text-align:right'>" + String.format("$%.2f", subtotalRep) + "</td></tr>");
             }
         }
         boolean tieneDetalles = detalles != null && !detalles.isEmpty();
@@ -785,7 +782,7 @@ public class ResendEmailService {
         return "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>" +
                "<meta name='viewport' content='width=device-width,initial-scale=1'>" +
                "<style>" +
-               "body{margin:0;padding:0;background:#050505;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}" +
+               "body{margin:0;padding:0;background:#EAEDF2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}" +
                "@media only screen and (max-width:620px){" +
                ".outer{padding:12px 4px!important}.hpad{padding:22px 20px!important}" +
                ".bpad{padding:24px 20px!important}.tpad{padding:0 20px!important}" +
@@ -793,39 +790,39 @@ public class ResendEmailService {
                "}" +
                "</style>" +
                "</head><body>" +
-               "<table class='outer' width='100%' cellpadding='0' cellspacing='0' style='padding:32px 16px;background:#050505'>" +
+               "<table class='outer' width='100%' cellpadding='0' cellspacing='0' style='padding:32px 16px;background:#EAEDF2'>" +
                "<tr><td align='center'>" +
-               "<table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;background:#0D0D12;border-radius:12px;overflow:hidden;border:1px solid #1F1F2E;box-shadow:0 10px 30px rgba(225,20,40,0.08)'>" +
+               "<table width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;box-shadow:0 10px 30px rgba(225,20,40,0.08)'>" +
                /* Banda superior */
-               "<tr><td style='background:#E11428;height:4px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
+               "<tr><td style='background:#E11428;height:5px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
                /* Header con logo */
-               "<tr><td class='hpad' style='padding:32px 36px 24px'>" +
+               "<tr><td class='hpad' style='background:#1E293B;padding:32px 36px 24px'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
                "<td style='vertical-align:middle'>" +
-               "<img src='" + LOGO + "' alt='Gorila Motos' width='56' height='56' style='display:block;border-radius:12px;border:1px solid rgba(225,20,40,0.2)' />" +
+               "<img src='" + LOGO + "' alt='Gorila Motos' width='56' height='56' style='display:block;border-radius:12px;border:2px solid rgba(225,20,40,0.1)' />" +
                "</td>" +
                "<td style='vertical-align:middle;padding-left:16px'>" +
                "<p style='margin:0;color:#fff;font-size:24px;font-weight:900;letter-spacing:-0.5px'>Gorila <span style='color:#E11428'>Motos</span></p>" +
-               "<p style='margin:4px 0 0;color:#8B8FA8;font-size:11px;letter-spacing:2px;text-transform:uppercase'>Taller Mecánico</p>" +
+               "<p style='margin:4px 0 0;color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:2px;text-transform:uppercase'>Taller Mecánico</p>" +
                "</td>" +
                "<td align='right' style='vertical-align:middle'>" +
                "<div style='background:rgba(225,20,40,0.1);border:1px solid rgba(225,20,40,0.25);border-radius:8px;padding:8px 12px;text-align:center'>" +
                "<p style='margin:0;color:#E11428;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase'>COMPROBANTE</p>" +
-               "<p style='margin:4px 0 0;color:#fff;font-size:14px;font-weight:700;font-family:\"Courier New\",monospace'>" + refNum + "</p>" +
+               "<p style='margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:14px;font-weight:700;font-family:\"Courier New\",monospace'>" + refNum + "</p>" +
                "</div></td></tr></table></td></tr>" +
                /* Saludo y Detalles */
-               "<tr><td class='bpad' style='padding:0 36px 24px'>" +
-               "<p style='margin:0 0 8px;font-size:22px;font-weight:800;color:#fff'>Comprobante de Servicio</p>" +
-               "<p style='margin:0 0 24px;font-size:14px;color:#8B8FA8;line-height:1.6'>Estimado/a <strong style='color:#fff'>" + nombre + "</strong>, aquí tienes el detalle de los servicios realizados a tu vehículo.</p>" +
-               "<table width='100%' cellpadding='0' cellspacing='0' style='background:#15151D;border-radius:8px;border:1px solid rgba(225,20,40,0.15)'>" +
+               "<tr><td class='bpad' style='padding:24px 36px'>" +
+               "<p style='margin:0 0 8px;font-size:22px;font-weight:800;color:#111'>Comprobante de Servicio</p>" +
+               "<p style='margin:0 0 24px;font-size:14px;color:#4B5563;line-height:1.6'>Estimado/a <strong style='color:#111'>" + nombre + "</strong>, aquí tienes el detalle de los servicios realizados a tu vehículo.</p>" +
+               "<table width='100%' cellpadding='0' cellspacing='0' style='background:#F8FAFC;border-radius:8px;border:1px solid rgba(225,20,40,0.15)'>" +
                "<tr>" +
-               "<td style='padding:16px;border-bottom:1px solid #1F1F2E;width:50%'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#8B8FA8'>Placa</p><p style='margin:0;font-size:15px;font-weight:700;color:#fff;font-family:\"Courier New\",monospace'>" + placa + "</p></td>" +
-               "<td style='padding:16px;border-bottom:1px solid #1F1F2E;border-left:1px solid #1F1F2E;width:50%'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#8B8FA8'>Fecha</p><p style='margin:0;font-size:14px;color:#EAEAEA'>" + fecha + "</p></td>" +
+               "<td style='padding:16px;border-bottom:1px solid #E2E8F0;width:50%'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748B'>Placa</p><p style='margin:0;font-size:15px;font-weight:700;color:#0F172A;font-family:\"Courier New\",monospace'>" + placa + "</p></td>" +
+               "<td style='padding:16px;border-bottom:1px solid #E2E8F0;border-left:1px solid #E2E8F0;width:50%'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748B'>Fecha</p><p style='margin:0;font-size:14px;color:#334155'>" + fecha + "</p></td>" +
                "</tr><tr>" +
-               "<td colspan='2' style='padding:16px'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#8B8FA8'>Servicio Realizado</p><p style='margin:0;font-size:15px;font-weight:600;color:#fff'>" + tipoServicio + "</p></td>" +
+               "<td colspan='2' style='padding:16px'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748B'>Servicio Realizado</p><p style='margin:0;font-size:15px;font-weight:600;color:#0F172A'>" + tipoServicio + "</p></td>" +
                "</tr></table></td></tr>" +
                /* Tabla de items */
-               (tieneDetalles ? ("<tr><td style='padding:0 36px 24px'><table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse'>" + filasHtml.toString() + "</table></td></tr>") : "") +
+               (tieneDetalles ? ("<tr><td style='padding:0 36px 24px'><table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden'>" + filasHtml.toString() + "</table></td></tr>") : "") +
                /* Total */
                "<tr><td style='padding:0 36px 32px'>" +
                "<div style='background:linear-gradient(135deg, #9F1239 0%, #4C0519 100%);border-radius:12px;padding:24px;border:1px solid rgba(225,20,40,0.2)'>" +
@@ -835,9 +832,9 @@ public class ResendEmailService {
                "<td align='right' style='vertical-align:bottom'><p style='margin:0;font-size:12px;color:rgba(255,255,255,0.8);font-weight:600'>¡Gracias por elegirnos!</p></td>" +
                "</tr></table></div></td></tr>" +
                /* Footer */
-               "<tr><td class='fpad' style='background:#09090D;padding:24px 36px;border-top:1px solid #1F1F2E'>" +
+               "<tr><td class='fpad' style='background:#F8F9FA;padding:24px 36px;border-top:1px solid #E5E7EB'>" +
                "<table width='100%' cellpadding='0' cellspacing='0'><tr>" +
-               "<td><p style='margin:0;font-size:11px;color:#8B8FA8'>© " + yr + " Gorila Motos. Cuenca, Ecuador.</p>" +
+               "<td><p style='margin:0;font-size:11px;color:#6B7280'>© " + yr + " Gorila Motos. Cuenca, Ecuador.</p>" +
                "<p style='margin:4px 0 0;font-size:11px'><a href='https://pagina-web-gorila-motos.vercel.app/' style='color:#E11428;text-decoration:none'>pagina-web-gorila-motos.vercel.app</a></p></td>" +
                "<td align='right'><img src='" + LOGO + "' alt='' width='32' height='32' style='border-radius:8px;opacity:0.5' /></td>" +
                "</tr></table></td></tr>" +
