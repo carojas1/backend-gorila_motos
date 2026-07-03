@@ -43,12 +43,7 @@ public class DatabaseSeeder {
             // (polvo, altitud Quito 2800m, combustible 87-octanos, tráfico urbano)
             // exigen servicio frecuente. Esto mantiene la moto en estado óptimo y
             // dispara recordatorios al correo del cliente más seguido.
-            // Se RE-SIEMBRA en cada arranque (deleteAll + insert) para que, si se
-            // ajustan los intervalos en código, queden vigentes tras el redeploy
-            // SIN intervención manual ni SQL.
-            parametroRepo.deleteAll();
-            {
-
+            if (parametroRepo.count() == 0) {
                 // 50-125cc: AKT, Shineray, Ranger, scooters — uso urbano intensivo
                 seedParam(parametroRepo, 50, 125,  "ACEITE",           1200, "Aceite motor — cambio cada 1 200 km (50-125cc)");
                 seedParam(parametroRepo, 50, 125,  "FILTRO_AIRE",      2500, "Filtro de aire — limpieza/cambio cada 2 500 km");
@@ -94,7 +89,7 @@ public class DatabaseSeeder {
                 seedParam(parametroRepo, 651, null, "FRENOS",           7500, "Discos y pastillas — cada 7 500 km");
                 seedParam(parametroRepo, 651, null, "REVISION_GENERAL", 9000, "Revisión general integral cada 9 000 km");
 
-                System.out.println("✅ Parámetros de mantenimiento Ecuador re-sembrados (35 filas, intervalos cortos)");
+                System.out.println("✅ Parámetros de mantenimiento creados (35 filas, intervalos iniciales)");
             }
         };
     }
