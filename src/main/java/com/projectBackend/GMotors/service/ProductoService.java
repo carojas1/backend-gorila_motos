@@ -1,9 +1,12 @@
 package com.projectBackend.GMotors.service;
 
 import com.projectBackend.GMotors.model.Producto;
+import com.projectBackend.GMotors.model.Factura;
+import com.projectBackend.GMotors.dto.DetalleFacturaCreateDTO;
 import com.projectBackend.GMotors.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import java.util.List;
@@ -16,6 +19,9 @@ public class ProductoService {
     
     @Autowired
     private SupabaseStorageService supabaseStorageService;
+
+    @Autowired
+    private FacturaService facturaService;
 
     // Obtener todos los productos
     public List<Producto> getAllProductos() {
@@ -100,6 +106,30 @@ public class ProductoService {
     // Eliminar varios productos 
     public void deleteProductos(List<Long> ids) {
         productoRepository.deleteAllById(ids);
+    }
+
+    @Transactional
+    public Factura registrarVentaDirecta(Long idProducto, Integer cantidad, Long idUsuario) {
+        if (idProducto == null) {
+            throw new IllegalArgumentException("El producto es obligatorio");
+        }
+        if (idUsuario == null) {
+            throw new IllegalArgumentException("El usuario que registra la venta es obligatorio");
+        }
+        if (cantidad == null || cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad debe ser mayor a 0");
+        }
+
+        DetalleFacturaCreateDTO detalle = new DetalleFacturaCreateDTO();
+        detalle.setIdProducto(idProducto);
+        detalle.setCantidad(cantidad);
+
+        Factura factura = facturaService.crearFactura(List.of(detalle), idUsuario);
+        productoRepository.findById(idProducto).ifPresent(producto -> {
+            producto.setFecha_modificacion(LocalDate.now());
+            productoRepository.save(producto);
+        });
+        return factura;
     }
 
 

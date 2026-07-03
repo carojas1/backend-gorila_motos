@@ -1,5 +1,6 @@
 package com.projectBackend.GMotors.controller;
 
+import com.projectBackend.GMotors.model.Factura;
 import com.projectBackend.GMotors.model.Producto;
 import com.projectBackend.GMotors.service.ProductoService;
 import com.projectBackend.GMotors.service.ResendEmailService;
@@ -78,6 +79,52 @@ public class ProductoController {
     }
     
     /* ── Envío de comprobante de venta de inventario por email ── */
+    @PostMapping("/venta-directa")
+    public ResponseEntity<Map<String, Object>> registrarVentaDirecta(@RequestBody Map<String, Object> datos) {
+        try {
+            Long idProducto = numberToLong(datos.get("idProducto") != null ? datos.get("idProducto") : datos.get("id_producto"));
+            Long idUsuario = numberToLong(datos.get("idUsuario") != null ? datos.get("idUsuario") : datos.get("id_usuario"));
+            Integer cantidad = numberToInteger(datos.get("cantidad"));
+
+            Factura factura = productoService.registrarVentaDirecta(idProducto, cantidad, idUsuario);
+            Producto producto = productoService.getProductoById(idProducto);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("mensaje", "Venta directa registrada");
+            response.put("idFactura", factura.getIdFactura());
+            response.put("id_factura", factura.getIdFactura());
+            response.put("costoTotal", factura.getCostoTotal());
+            response.put("costo_total", factura.getCostoTotal());
+            response.put("fechaEmision", factura.getFechaEmision());
+            response.put("fecha_emision", factura.getFechaEmision());
+            response.put("stockRestante", producto != null ? producto.getStock() : null);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("error", "Error al registrar venta directa: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    private Long numberToLong(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number number) return number.longValue();
+        return Long.parseLong(value.toString());
+    }
+
+    private Integer numberToInteger(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number number) return number.intValue();
+        return Integer.parseInt(value.toString());
+    }
+
     @PostMapping("/venta-comprobante")
     public ResponseEntity<Map<String, Object>> enviarComprobanteVenta(
             @RequestBody Map<String, Object> datos) {
