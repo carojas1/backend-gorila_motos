@@ -177,8 +177,10 @@ public class RegistroService {
 		dto.setIdMoto(registro.getMoto().getIdMoto());
 		dto.setFecha(registro.getFecha());
 		dto.setDescripcion(registro.getObservaciones());
+		dto.setObservaciones(registro.getObservaciones());
 		dto.setEstado(registro.getEstado());
 
+		dto.setIdCliente(registro.getCliente().getId_usuario());
 		dto.setNombreCliente(registro.getCliente().getNombre_completo());
 
 		if (registro.getEncargado() != null) {
@@ -204,6 +206,7 @@ public class RegistroService {
 			if (registro.getFactura().getCostoTotal() != null) {
 				dto.setCostoTotal(registro.getFactura().getCostoTotal().doubleValue());
 			}
+			dto.setDetalles(facturaService.obtenerDetallesPorFactura(registro.getFactura().getIdFactura()));
 		}
 
 		return dto;

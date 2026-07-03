@@ -75,13 +75,17 @@ public class DetalleFacturaService {
                 );
             }
 
-            if (dto.getPrecioUnitario().compareTo(BigDecimal.ZERO) < 0) {
+            boolean esDescuentoPuntos = esDescuentoPuntos(dto.getDescripcion());
+            if (dto.getPrecioUnitario().compareTo(BigDecimal.ZERO) < 0 && !esDescuentoPuntos) {
                 throw new IllegalArgumentException(
                         "Backend-DetallesFactS: El precio no puede ser negativo"
                 );
             }
             if (dto.getDescripcion() == null || dto.getDescripcion().isBlank()) {
                 throw new IllegalArgumentException("Backend-DetallesFactS: La descripción es obligatoria");
+            }
+            if (esDescuentoPuntos && dto.getCantidad() != 1) {
+                throw new IllegalArgumentException("Backend-DetallesFactS: El descuento de puntos debe tener cantidad 1");
             }
             //FIX:31/03/26
             //Atlas
@@ -170,5 +174,9 @@ public class DetalleFacturaService {
         if (dto.getCantidad() == null || dto.getCantidad() <= 0) {
             throw new IllegalArgumentException("Backend-DetallesFactS: La cantidad debe ser mayor a 0");
         }
+    }
+
+    private boolean esDescuentoPuntos(String descripcion) {
+        return descripcion != null && descripcion.trim().toUpperCase().startsWith("[DESC|PUNTOS:");
     }
 }

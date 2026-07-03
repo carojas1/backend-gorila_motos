@@ -79,6 +79,7 @@ public class FacturaService {
             totalFactura = totalFactura.add(detalle.getSubtotal());
         }
 
+        validarTotalNoNegativo(totalFactura);
         factura.setCostoTotal(totalFactura);
         return facturaRepository.save(factura);
     }
@@ -144,6 +145,7 @@ public class FacturaService {
             detalleFacturaRepository.delete(eliminado);
         }
 
+        validarTotalNoNegativo(total);
         // Actualizar total
         factura.setCostoTotal(total);
         return facturaRepository.save(factura);
@@ -161,6 +163,12 @@ public class FacturaService {
 
         producto.setStock(producto.getStock() + detalle.getCantidad());
         productoRepository.save(producto);
+    }
+
+    private void validarTotalNoNegativo(BigDecimal total) {
+        if (total.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El descuento no puede dejar la factura en negativo");
+        }
     }
 
     // =====================================================================

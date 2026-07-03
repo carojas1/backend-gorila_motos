@@ -14,6 +14,7 @@ public class RegistroListadoDTO {
     private Long idMoto;
 
     // ================== CLIENTE ==================
+    private Long idCliente;
     private String nombreCliente;
 
     // ================== ENCARGADO ==================
@@ -29,6 +30,7 @@ public class RegistroListadoDTO {
     // ================== MANTENIMIENTO ==================
     private LocalDate fecha;
     private String descripcion;
+    private String observaciones;
     private String tipoMantenimiento;
     private Integer kilometraje;
 
@@ -52,6 +54,9 @@ public class RegistroListadoDTO {
 
     public String getNombre_cliente() { return nombreCliente; }
     public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+
+    public Long getId_cliente() { return idCliente; }
+    public void setIdCliente(Long idCliente) { this.idCliente = idCliente; }
 
     public Long getId_encargado() { return idEncargado; }
     public void setIdEncargado(Long idEncargado) { this.idEncargado = idEncargado; }
@@ -77,6 +82,9 @@ public class RegistroListadoDTO {
 
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+    public String getObservaciones() { return observaciones; }
+    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
 
     public String getTipo_servicio() { return tipoMantenimiento; }
     public void setTipoMantenimiento(String tipoMantenimiento) { this.tipoMantenimiento = tipoMantenimiento; }
