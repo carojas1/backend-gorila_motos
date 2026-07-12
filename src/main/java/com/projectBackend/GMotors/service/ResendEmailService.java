@@ -401,6 +401,88 @@ public class ResendEmailService {
         return enviar(correoCliente, "Comprobante de compra #" + ref + " — Gorila Motos", html);
     }
 
+    public boolean enviarComprobanteInventario(String correoCliente, String nombreCliente,
+                                               java.util.List<java.util.Map<String, Object>> items,
+                                               double total, String fecha, String referencia,
+                                               java.util.Map<String, Object> cliente) {
+        String ref = referencia != null ? referencia : ("GRM-" + java.time.LocalDate.now().toString().replace("-","").substring(2) + "-" + java.util.UUID.randomUUID().toString().substring(0,4).toUpperCase());
+        String html = htmlComprobanteItems(nombreCliente, items, total, fecha, ref, cliente);
+        return enviar(correoCliente, "Comprobante de compra #" + ref + " - Gorila Motos", html);
+    }
+
+    private String htmlComprobanteItems(String nombre, java.util.List<java.util.Map<String, Object>> items,
+                                        double total, String fecha, String referencia,
+                                        java.util.Map<String, Object> cliente) {
+        StringBuilder filas = new StringBuilder();
+        for (java.util.Map<String, Object> item : items) {
+            String producto = esc(text(item, "nombreProducto", "nombre", "descripcion"));
+            String codigo = esc(text(item, "codigoProducto", "codigo", "codigo_personal"));
+            int cantidad = intVal(item.get("cantidad"), 1);
+            double pvp = doubleVal(item.get("pvp"), doubleVal(item.get("precioUnitario"), 0));
+            double subtotal = doubleVal(item.get("subtotal"), cantidad * pvp);
+            filas.append("<tr style='background:#fff'>")
+                 .append("<td style='padding:14px;font-family:Arial,sans-serif;font-size:14px;font-weight:600;color:#111'>")
+                 .append(producto).append("<br><span style='font-size:11px;color:#9CA3AF;font-weight:400'>Ref: ").append(codigo).append("</span></td>")
+                 .append("<td style='padding:14px;text-align:center;font-family:Arial,sans-serif;font-size:15px;font-weight:700;color:#374151'>").append(cantidad).append("</td>")
+                 .append("<td style='padding:14px;text-align:right;font-family:Arial,sans-serif;font-size:14px;color:#374151'>").append(String.format("$%.2f", pvp)).append("</td>")
+                 .append("<td style='padding:14px;text-align:right;font-family:Arial,sans-serif;font-size:15px;font-weight:800;color:#E11428'>").append(String.format("$%.2f", subtotal)).append("</td>")
+                 .append("</tr>");
+        }
+
+        String datosCliente = "";
+        if (cliente != null) {
+            datosCliente = "<div style='margin-top:14px;background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:12px 14px;font-family:Arial,sans-serif'>" +
+                    "<p style='margin:0 0 8px;font-size:10px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#64748B'>Datos del cliente</p>" +
+                    "<p style='margin:0;font-size:12px;color:#111;line-height:1.6'>" +
+                    "<strong>Nombre:</strong> " + esc(text(cliente, "nombre", "nombreCliente")) + "<br>" +
+                    "<strong>Cedula/RUC:</strong> " + esc(text(cliente, "cedula", "ruc", "identificacion")) + "<br>" +
+                    "<strong>Telefono:</strong> " + esc(text(cliente, "telefono", "celular")) + "<br>" +
+                    "<strong>Correo:</strong> " + esc(text(cliente, "correo", "email")) + "<br>" +
+                    "<strong>Direccion:</strong> " + esc(text(cliente, "direccion")) +
+                    "</p></div>";
+        }
+
+        String totalStr = String.format("$%.2f", total);
+        int yr = java.time.Year.now().getValue();
+        return "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>" +
+               "<style>body{margin:0;padding:0;background:#EAEDF2;font-family:Georgia,'Times New Roman',serif}.wrap{max-width:600px;margin:0 auto;background:#fff;border-radius:4px;overflow:hidden}</style></head><body>" +
+               "<table width='100%' cellpadding='0' cellspacing='0' style='padding:32px 16px;background:#EAEDF2'><tr><td align='center'>" +
+               "<table class='wrap' width='600' cellpadding='0' cellspacing='0' style='max-width:600px;width:100%;box-shadow:0 2px 24px rgba(225,20,40,0.10)'>" +
+               "<tr><td style='background:#E11428;height:5px;font-size:1px;line-height:1px'>&nbsp;</td></tr>" +
+               "<tr><td style='background:#1E293B;padding:28px 36px'><table width='100%'><tr><td><p style='margin:0;color:#fff;font-size:22px;font-weight:700'>Gorila <span style='color:#E11428'>Motos</span></p><p style='margin:3px 0 0;color:rgba(255,255,255,0.45);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-family:Arial,sans-serif'>Taller Mecanico - Cuenca, Ecuador</p></td><td align='right'><p style='margin:0;color:#E11428;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;font-family:Arial,sans-serif'>COMPROBANTE</p><p style='margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:13px;font-weight:700;font-family:\"Courier New\",monospace'>#" + referencia + "</p></td></tr></table></td></tr>" +
+               "<tr><td style='padding:30px 36px 10px;border-bottom:1px solid #F1F1F4'><p style='margin:0 0 4px;font-size:22px;font-weight:700;color:#111'>Gracias por tu confianza</p><p style='margin:0;font-family:Arial,sans-serif;font-size:14px;color:#555;line-height:1.6'>Estimado/a <strong style='color:#111'>" + esc(nombre) + "</strong>, este es el detalle completo de tu compra.</p>" + datosCliente + "</td></tr>" +
+               "<tr><td style='padding:24px 36px 0'><p style='margin:0 0 12px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9CA3AF'>Detalle de la compra</p><table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;border:1px solid rgba(225,20,40,0.15)'><tr style='background:#FFF5F5'><th style='padding:10px 14px;text-align:left;font-family:Arial,sans-serif;font-size:10px;color:#9F1239'>Producto</th><th style='padding:10px 14px;text-align:center;font-family:Arial,sans-serif;font-size:10px;color:#9F1239'>Cant.</th><th style='padding:10px 14px;text-align:right;font-family:Arial,sans-serif;font-size:10px;color:#9F1239'>P. Unit.</th><th style='padding:10px 14px;text-align:right;font-family:Arial,sans-serif;font-size:10px;color:#9F1239'>Subtotal</th></tr>" + filas + "</table>" +
+               "<table width='100%' style='margin-top:12px'><tr><td align='right' style='font-family:Arial,sans-serif;font-size:13px;font-weight:800;color:#E11428'>TOTAL&nbsp;&nbsp;<span style='font-size:22px;color:#9F1239'>" + totalStr + "</span></td></tr></table></td></tr>" +
+               "<tr><td style='padding:20px 36px'><div style='background:#1E293B;border-radius:10px;padding:18px 24px;color:#fff'><table width='100%'><tr><td><p style='margin:0;font-family:Arial,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.65)'>Total pagado</p><p style='margin:6px 0 0;font-size:30px;font-weight:700'>" + totalStr + "</p></td><td align='right'><p style='margin:0;font-family:Arial,sans-serif;font-size:11px;color:rgba(255,255,255,0.5)'>" + esc(fecha) + "</p><p style='margin:6px 0 0;font-family:\"Courier New\",monospace;font-size:11px;color:rgba(255,255,255,0.35)'>#" + referencia + "</p></td></tr></table></div></td></tr>" +
+               "<tr><td style='background:#F8F9FA;border-top:1px solid #E5E7EB;padding:18px 36px'><p style='margin:0;font-family:Arial,sans-serif;font-size:10px;color:#9CA3AF'>© " + yr + " Gorila Motos S.A.S. - Cuenca, Ecuador</p></td></tr>" +
+               "<tr><td style='background:#E11428;height:4px;font-size:1px;line-height:1px'>&nbsp;</td></tr></table></td></tr></table></body></html>";
+    }
+
+    private String text(java.util.Map<String, Object> data, String... keys) {
+        if (data == null) return "—";
+        for (String key : keys) {
+            Object value = data.get(key);
+            if (value != null && !value.toString().isBlank()) return value.toString();
+        }
+        return "—";
+    }
+
+    private int intVal(Object value, int fallback) {
+        if (value instanceof Number n) return n.intValue();
+        try { return value == null ? fallback : Integer.parseInt(value.toString()); } catch (Exception e) { return fallback; }
+    }
+
+    private double doubleVal(Object value, double fallback) {
+        if (value instanceof Number n) return n.doubleValue();
+        try { return value == null ? fallback : Double.parseDouble(value.toString()); } catch (Exception e) { return fallback; }
+    }
+
+    private String esc(String value) {
+        if (value == null) return "—";
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                .replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
     private String htmlComprobante(String nombre, String producto, String codigo,
                                     int cantidad, double pvp, double total,
                                     String fecha, String referencia) {

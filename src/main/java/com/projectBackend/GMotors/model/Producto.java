@@ -14,6 +14,8 @@ public class Producto {
     private Long id_producto;
 
     private String codigo_proveedor;
+    @Column(name = "codigo_distribuidor")
+    private String codigo_distribuidor;
     private String codigo_personal;
     private String nombre;
     private String descripcion;
@@ -49,6 +51,14 @@ public class Producto {
 
     public void setCodigo_proveedor(String codigo_proveedor) {
         this.codigo_proveedor = codigo_proveedor;
+    }
+
+    public String getCodigo_distribuidor() {
+        return codigo_distribuidor;
+    }
+
+    public void setCodigo_distribuidor(String codigo_distribuidor) {
+        this.codigo_distribuidor = codigo_distribuidor;
     }
     
     

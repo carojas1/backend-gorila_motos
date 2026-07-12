@@ -52,7 +52,9 @@ public class DetalleFacturaService {
                     .setScale(2, RoundingMode.HALF_UP);
 
             detalle.setId_producto(producto.getId_producto());
-            detalle.setDescripcion(producto.getDescripcion()); // tomado del producto
+            detalle.setDescripcion(producto.getNombre() != null && !producto.getNombre().isBlank()
+                    ? producto.getNombre()
+                    : producto.getDescripcion());
             
             // Restar el Stock del Producto
             int nuevoStock = producto.getStock() - dto.getCantidad();
@@ -146,7 +148,9 @@ public class DetalleFacturaService {
 
         if (producto != null) {
             detalleExistente.setId_producto(producto.getId_producto());
-            detalleExistente.setDescripcion(producto.getDescripcion());
+            detalleExistente.setDescripcion(producto.getNombre() != null && !producto.getNombre().isBlank()
+                    ? producto.getNombre()
+                    : producto.getDescripcion());
             detalleExistente.setSubtotal(
                     producto.getPvp()
                             .multiply(BigDecimal.valueOf(cantidadNueva))

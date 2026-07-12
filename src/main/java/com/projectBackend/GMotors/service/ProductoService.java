@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProductoService {
@@ -67,6 +68,9 @@ public class ProductoService {
             }
             if (producto.getCodigo_proveedor() != null) {
                 existing.setCodigo_proveedor(producto.getCodigo_proveedor());
+            }
+            if (producto.getCodigo_distribuidor() != null) {
+                existing.setCodigo_distribuidor(producto.getCodigo_distribuidor());
             }
             
             String nuevaFoto = producto.getruta_imagenproductos();
@@ -130,6 +134,42 @@ public class ProductoService {
             productoRepository.save(producto);
         });
         return factura;
+    }
+
+    @Transactional
+    public Factura registrarVentaDirecta(
+            List<DetalleFacturaCreateDTO> detalles,
+            Long idUsuario,
+            Map<String, Object> cliente
+    ) {
+        if (idUsuario == null) {
+            throw new IllegalArgumentException("El usuario que registra la venta es obligatorio");
+        }
+        if (detalles == null || detalles.isEmpty()) {
+            throw new IllegalArgumentException("La venta debe tener al menos un producto");
+        }
+
+        Factura factura = facturaService.crearFactura(detalles, idUsuario);
+        factura.setOrigenVenta("INVENTARIO");
+        if (cliente != null) {
+            factura.setClienteNombre(text(cliente, "nombre", "nombreCliente"));
+            factura.setClienteCedula(text(cliente, "cedula", "ruc", "identificacion"));
+            factura.setClienteTelefono(text(cliente, "telefono", "celular"));
+            factura.setClienteCorreo(text(cliente, "correo", "email"));
+            factura.setClienteDireccion(text(cliente, "direccion"));
+            factura.setClienteTipo(text(cliente, "tipo"));
+        }
+        return facturaService.save(factura);
+    }
+
+    private String text(Map<String, Object> data, String... keys) {
+        for (String key : keys) {
+            Object value = data.get(key);
+            if (value != null && !value.toString().isBlank()) {
+                return value.toString().trim();
+            }
+        }
+        return null;
     }
 
 

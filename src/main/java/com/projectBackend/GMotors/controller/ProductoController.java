@@ -2,6 +2,7 @@ package com.projectBackend.GMotors.controller;
 
 import com.projectBackend.GMotors.model.Factura;
 import com.projectBackend.GMotors.model.Producto;
+import com.projectBackend.GMotors.dto.DetalleFacturaCreateDTO;
 import com.projectBackend.GMotors.service.ProductoService;
 import com.projectBackend.GMotors.service.ResendEmailService;
 import com.projectBackend.GMotors.service.SupabaseStorageService;
@@ -14,10 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,12 +81,15 @@ public class ProductoController {
     @PostMapping("/venta-directa")
     public ResponseEntity<Map<String, Object>> registrarVentaDirecta(@RequestBody Map<String, Object> datos) {
         try {
-            Long idProducto = numberToLong(datos.get("idProducto") != null ? datos.get("idProducto") : datos.get("id_producto"));
             Long idUsuario = numberToLong(datos.get("idUsuario") != null ? datos.get("idUsuario") : datos.get("id_usuario"));
-            Integer cantidad = numberToInteger(datos.get("cantidad"));
 
-            Factura factura = productoService.registrarVentaDirecta(idProducto, cantidad, idUsuario);
-            Producto producto = productoService.getProductoById(idProducto);
+            List<DetalleFacturaCreateDTO> detalles = parseVentaItems(datos);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> cliente = datos.get("cliente") instanceof Map<?, ?>
+                    ? (Map<String, Object>) datos.get("cliente")
+                    : null;
+
+            Factura factura = productoService.registrarVentaDirecta(detalles, idUsuario, cliente);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -98,7 +100,11 @@ public class ProductoController {
             response.put("costo_total", factura.getCostoTotal());
             response.put("fechaEmision", factura.getFechaEmision());
             response.put("fecha_emision", factura.getFechaEmision());
-            response.put("stockRestante", producto != null ? producto.getStock() : null);
+            response.put("stocks", stocksActuales(detalles));
+            if (detalles.size() == 1) {
+                Producto producto = productoService.getProductoById(detalles.get(0).getIdProducto());
+                response.put("stockRestante", producto != null ? producto.getStock() : null);
+            }
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             Map<String, Object> error = new HashMap<>();
@@ -125,6 +131,42 @@ public class ProductoController {
         return Integer.parseInt(value.toString());
     }
 
+    @SuppressWarnings("unchecked")
+    private List<DetalleFacturaCreateDTO> parseVentaItems(Map<String, Object> datos) {
+        List<DetalleFacturaCreateDTO> detalles = new ArrayList<>();
+        Object rawItems = datos.get("items");
+        if (rawItems instanceof List<?> items) {
+            for (Object raw : items) {
+                if (!(raw instanceof Map<?, ?> item)) continue;
+                DetalleFacturaCreateDTO dto = new DetalleFacturaCreateDTO();
+                Object idRaw = item.get("idProducto") != null ? item.get("idProducto") : item.get("id_producto");
+                dto.setIdProducto(numberToLong(idRaw));
+                dto.setCantidad(numberToInteger(item.get("cantidad")));
+                if (item.get("precioUnitario") != null) {
+                    dto.setPrecioUnitario(new BigDecimal(item.get("precioUnitario").toString()));
+                }
+                if (item.get("descripcion") != null) dto.setDescripcion(item.get("descripcion").toString());
+                detalles.add(dto);
+            }
+        } else {
+            DetalleFacturaCreateDTO dto = new DetalleFacturaCreateDTO();
+            dto.setIdProducto(numberToLong(datos.get("idProducto") != null ? datos.get("idProducto") : datos.get("id_producto")));
+            dto.setCantidad(numberToInteger(datos.get("cantidad")));
+            detalles.add(dto);
+        }
+        return detalles;
+    }
+
+    private Map<Long, Integer> stocksActuales(List<DetalleFacturaCreateDTO> detalles) {
+        Map<Long, Integer> stocks = new HashMap<>();
+        for (DetalleFacturaCreateDTO detalle : detalles) {
+            if (detalle.getIdProducto() == null) continue;
+            Producto producto = productoService.getProductoById(detalle.getIdProducto());
+            if (producto != null) stocks.put(detalle.getIdProducto(), producto.getStock());
+        }
+        return stocks;
+    }
+
     @PostMapping("/venta-comprobante")
     public ResponseEntity<Map<String, Object>> enviarComprobanteVenta(
             @RequestBody Map<String, Object> datos) {
@@ -132,14 +174,24 @@ public class ProductoController {
         String nombreCliente   = (String) datos.get("nombreCliente");
         String nombreProducto  = (String) datos.get("nombreProducto");
         String codigoProducto  = datos.get("codigoProducto") != null ? (String) datos.get("codigoProducto") : null;
-        int    cantidad        = ((Number) datos.get("cantidad")).intValue();
-        double pvp             = ((Number) datos.get("pvp")).doubleValue();
+        int    cantidad        = datos.get("cantidad") instanceof Number ? ((Number) datos.get("cantidad")).intValue() : 1;
+        double pvp             = datos.get("pvp") instanceof Number ? ((Number) datos.get("pvp")).doubleValue() : 0.0;
         double total           = ((Number) datos.get("total")).doubleValue();
         String fecha           = (String) datos.get("fecha");
         String referencia      = datos.get("referencia") != null ? (String) datos.get("referencia") : null;
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> items = datos.get("items") instanceof List<?>
+                ? (List<Map<String, Object>>) datos.get("items")
+                : null;
+        @SuppressWarnings("unchecked")
+        Map<String, Object> cliente = datos.get("cliente") instanceof Map<?, ?>
+                ? (Map<String, Object>) datos.get("cliente")
+                : null;
 
-        boolean sent = resendEmailService.enviarComprobanteInventario(
-                correo, nombreCliente, nombreProducto, codigoProducto, cantidad, pvp, total, fecha, referencia);
+        boolean sent = items != null && !items.isEmpty()
+                ? resendEmailService.enviarComprobanteInventario(correo, nombreCliente, items, total, fecha, referencia, cliente)
+                : resendEmailService.enviarComprobanteInventario(
+                        correo, nombreCliente, nombreProducto, codigoProducto, cantidad, pvp, total, fecha, referencia);
 
         Map<String, Object> response = new HashMap<>();
         response.put("sent", sent);
