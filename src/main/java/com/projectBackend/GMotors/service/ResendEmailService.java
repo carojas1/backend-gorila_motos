@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.projectBackend.GMotors.model.DetalleFactura;
+import com.projectBackend.GMotors.model.Usuario;
 import jakarta.mail.internet.MimeMessage;
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -170,14 +171,22 @@ public class ResendEmailService {
                                   String placa, String tipoServicio,
                                   double costoTotal, String fecha,
                                   Long idRegistro) {
-        return enviarFactura(correoCliente, nombreCliente, placa, tipoServicio, costoTotal, fecha, idRegistro, null);
+        return enviarFactura(correoCliente, nombreCliente, placa, tipoServicio, costoTotal, fecha, idRegistro, null, null);
     }
 
     public boolean enviarFactura(String correoCliente, String nombreCliente,
                                   String placa, String tipoServicio,
                                   double costoTotal, String fecha,
                                   Long idRegistro, List<DetalleFactura> detalles) {
-        String html = htmlServicio(nombreCliente, placa, tipoServicio, costoTotal, fecha, idRegistro, detalles);
+        return enviarFactura(correoCliente, nombreCliente, placa, tipoServicio, costoTotal, fecha, idRegistro, detalles, null);
+    }
+
+    public boolean enviarFactura(String correoCliente, String nombreCliente,
+                                  String placa, String tipoServicio,
+                                  double costoTotal, String fecha,
+                                  Long idRegistro, List<DetalleFactura> detalles,
+                                  Usuario cliente) {
+        String html = htmlServicio(nombreCliente, placa, tipoServicio, costoTotal, fecha, idRegistro, detalles, cliente);
         String refAsunto = idRegistro != null ? String.format("ORD-%06d", idRegistro) : "";
         return enviar(correoCliente, "Comprobante de servicio " + refAsunto + " — Gorila Motos", html);
     }
@@ -800,11 +809,40 @@ public class ResendEmailService {
 
     private String htmlServicio(String nombre, String placa, String tipoServicio,
                                 double costoTotal, String fecha, Long idRegistro,
-                                List<DetalleFactura> detalles) {
-        String costoStr = String.format("$%.2f", costoTotal);
+                                List<DetalleFactura> detalles, Usuario cliente) {
+        BigDecimal totalDetalles = detalles == null ? BigDecimal.ZERO : detalles.stream()
+                .map(d -> d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        double totalMostrado = detalles != null && !detalles.isEmpty()
+                ? totalDetalles.doubleValue()
+                : costoTotal;
+        String costoStr = String.format("$%.2f", totalMostrado);
         String refNum   = idRegistro != null ? String.format("ORD-%06d", idRegistro) : "ORD";
         int yr = java.time.Year.now().getValue();
         String LOGO = "https://backend-gorila-motos.onrender.com/images/gorila-logo.png";
+
+        String nombreCompleto = primerDato(cliente != null ? cliente.getNombre_completo() : null, nombre);
+        String cedula = primerDato(
+                cliente != null ? cliente.getCedula() : null,
+                datoEnDescripcion(cliente != null ? cliente.getDescripcion() : null, "CEDULA"),
+                datoEnDescripcion(cliente != null ? cliente.getDescripcion() : null, "RUC"));
+        String telefono = primerDato(
+                cliente != null ? cliente.getTelefono() : null,
+                datoEnDescripcion(cliente != null ? cliente.getDescripcion() : null, "TELEFONO"));
+        String correo = primerDato(cliente != null ? cliente.getCorreo() : null);
+        String direccion = primerDato(cliente != null ? cliente.getDireccion() : null);
+        nombre = esc(nombreCompleto);
+
+        String datosClienteHtml =
+                "<tr><td style='padding:0 36px 24px'>" +
+                "<p style='margin:0 0 10px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#64748B'>Datos del cliente</p>" +
+                "<table width='100%' cellpadding='0' cellspacing='0' style='background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px'>" +
+                datoClienteFila("Nombre", nombreCompleto) +
+                datoClienteFila("Cédula / RUC", cedula) +
+                datoClienteFila("Teléfono", telefono) +
+                datoClienteFila("Correo", correo) +
+                datoClienteFila("Dirección", direccion) +
+                "</table></td></tr>";
 
         StringBuilder filasHtml = new StringBuilder();
         if (detalles != null && !detalles.isEmpty()) {
@@ -904,6 +942,7 @@ public class ResendEmailService {
                "</tr><tr>" +
                "<td colspan='2' style='padding:16px'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748B'>Servicio Realizado</p><p style='margin:0;font-size:15px;font-weight:600;color:#0F172A'>" + tipoServicio + "</p></td>" +
                "</tr></table></td></tr>" +
+               datosClienteHtml +
                /* Tabla de items */
                (tieneDetalles ? ("<tr><td style='padding:0 36px 24px'><table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden'>" + filasHtml.toString() + "</table></td></tr>") : "") +
                /* Total */
@@ -922,6 +961,27 @@ public class ResendEmailService {
                "<td align='right'><img src='" + LOGO + "' alt='' width='32' height='32' style='border-radius:8px;opacity:0.5' /></td>" +
                "</tr></table></td></tr>" +
                "</table></td></tr></table></body></html>";
+    }
+
+    private String primerDato(String... valores) {
+        for (String valor : valores) {
+            if (valor != null && !valor.isBlank()) return valor.trim();
+        }
+        return "No registrado";
+    }
+
+    private String datoEnDescripcion(String descripcion, String etiqueta) {
+        if (descripcion == null || descripcion.isBlank()) return null;
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("(?i)(?:^|\\|)\\s*" + java.util.regex.Pattern.quote(etiqueta) + "\\s*:\\s*([^|]+)")
+                .matcher(descripcion);
+        return matcher.find() ? matcher.group(1).trim() : null;
+    }
+
+    private String datoClienteFila(String etiqueta, String valor) {
+        return "<tr><td style='padding:7px 12px;width:34%;font-family:Arial,sans-serif;font-size:11px;font-weight:700;color:#64748B;border-bottom:1px solid #E2E8F0'>" +
+                esc(etiqueta) + "</td><td style='padding:7px 12px;font-family:Arial,sans-serif;font-size:12px;font-weight:600;color:#0F172A;border-bottom:1px solid #E2E8F0'>" +
+                esc(valor) + "</td></tr>";
     }
 
     private String fila(String label, String value) {

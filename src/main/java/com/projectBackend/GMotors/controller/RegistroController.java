@@ -109,9 +109,9 @@ public class RegistroController {
 					String placa    = registro.getMoto()  != null ? registro.getMoto().getPlaca()   : "—";
 					String tipoServ = registro.getTipo()  != null ? registro.getTipo().getNombre()  : "Servicio de taller";
 					double total    = factura.getCostoTotal() != null ? factura.getCostoTotal().doubleValue() : 0.0;
-					String fecha    = factura.getFechaEmision() != null ? factura.getFechaEmision().toString() : "";
+					String fecha    = registro.getFecha() != null ? registro.getFecha().toString() : "";
 					List<DetalleFactura> dets = detalleFacturaRepository.findByIdFactura(factura.getIdFactura());
-					emailService.enviarFactura(correo, cliente.getNombre_completo(), placa, tipoServ, total, fecha, idRegistro, dets);
+					emailService.enviarFactura(correo, cliente.getNombre_completo(), placa, tipoServ, total, fecha, idRegistro, dets, cliente);
 					System.out.println("[RegistroController] Factura enviada por correo a " + correo);
 				}
 			} catch (Exception mailEx) {
@@ -171,7 +171,7 @@ public class RegistroController {
 						emailService.enviarFactura(
 							cliente.getCorreo(),
 							cliente.getNombre_completo(),
-							placa, tipo, costo, fecha, id, dets2
+							placa, tipo, costo, fecha, id, dets2, cliente
 						);
 					}
 				} catch (Exception emailEx) {
