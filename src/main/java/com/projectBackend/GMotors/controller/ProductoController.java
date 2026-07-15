@@ -3,6 +3,8 @@ package com.projectBackend.GMotors.controller;
 import com.projectBackend.GMotors.model.Factura;
 import com.projectBackend.GMotors.model.Producto;
 import com.projectBackend.GMotors.dto.DetalleFacturaCreateDTO;
+import com.projectBackend.GMotors.dto.DetalleFacturaDTO;
+import com.projectBackend.GMotors.service.FacturaService;
 import com.projectBackend.GMotors.service.ProductoService;
 import com.projectBackend.GMotors.service.ResendEmailService;
 import com.projectBackend.GMotors.service.SupabaseStorageService;
@@ -30,6 +32,9 @@ public class ProductoController {
 
     @Autowired
     private ResendEmailService resendEmailService;
+
+    @Autowired
+    private FacturaService facturaService;
 
     @Autowired
     private SupabaseStorageService supabaseStorageService;
@@ -176,7 +181,7 @@ public class ProductoController {
         String codigoProducto  = datos.get("codigoProducto") != null ? (String) datos.get("codigoProducto") : null;
         int    cantidad        = datos.get("cantidad") instanceof Number ? ((Number) datos.get("cantidad")).intValue() : 1;
         double pvp             = datos.get("pvp") instanceof Number ? ((Number) datos.get("pvp")).doubleValue() : 0.0;
-        double total           = ((Number) datos.get("total")).doubleValue();
+        double total           = datos.get("total") instanceof Number ? ((Number) datos.get("total")).doubleValue() : 0.0;
         String fecha           = (String) datos.get("fecha");
         String referencia      = datos.get("referencia") != null ? (String) datos.get("referencia") : null;
         @SuppressWarnings("unchecked")
@@ -188,6 +193,40 @@ public class ProductoController {
                 ? (Map<String, Object>) datos.get("cliente")
                 : null;
 
+        Long idFactura = numberToLong(datos.get("idFactura") != null ? datos.get("idFactura") : datos.get("id_factura"));
+        if (idFactura != null) {
+            Factura factura = facturaService.obtenerFacturaPorId(idFactura)
+                    .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada: " + idFactura));
+            List<DetalleFacturaDTO> detalles = facturaService.obtenerDetallesPorFactura(idFactura);
+            List<Map<String, Object>> itemsPersistidos = new ArrayList<>();
+            for (DetalleFacturaDTO detalle : detalles) {
+                Map<String, Object> item = new HashMap<>();
+                Producto producto = detalle.getIdProducto() != null
+                        ? productoService.getProductoById(detalle.getIdProducto())
+                        : null;
+                item.put("nombreProducto", detalle.getDescripcion());
+                item.put("codigoProducto", producto != null ? producto.getCodigo_personal() : null);
+                item.put("cantidad", detalle.getCantidad());
+                item.put("pvp", detalle.getPrecioUnitario());
+                item.put("subtotal", detalle.getSubtotal());
+                itemsPersistidos.add(item);
+            }
+            items = itemsPersistidos;
+            total = factura.getCostoTotal() != null ? factura.getCostoTotal().doubleValue() : 0.0;
+            fecha = factura.getFechaEmision() != null ? factura.getFechaEmision().toString() : fecha;
+            referencia = "FAC-" + String.format("%05d", idFactura);
+
+            Map<String, Object> clientePersistido = new HashMap<>();
+            clientePersistido.put("nombre", factura.getClienteNombre());
+            clientePersistido.put("cedula", factura.getClienteCedula());
+            clientePersistido.put("telefono", factura.getClienteTelefono());
+            clientePersistido.put("correo", factura.getClienteCorreo());
+            clientePersistido.put("direccion", factura.getClienteDireccion());
+            cliente = clientePersistido;
+            correo = primerTexto(factura.getClienteCorreo(), correo);
+            nombreCliente = primerTexto(factura.getClienteNombre(), nombreCliente, "Consumidor final");
+        }
+
         boolean sent = items != null && !items.isEmpty()
                 ? resendEmailService.enviarComprobanteInventario(correo, nombreCliente, items, total, fecha, referencia, cliente)
                 : resendEmailService.enviarComprobanteInventario(
@@ -196,6 +235,13 @@ public class ProductoController {
         Map<String, Object> response = new HashMap<>();
         response.put("sent", sent);
         return ResponseEntity.ok(response);
+    }
+
+    private String primerTexto(String... valores) {
+        for (String valor : valores) {
+            if (valor != null && !valor.isBlank()) return valor.trim();
+        }
+        return null;
     }
 
     @PostMapping("/eliminar")

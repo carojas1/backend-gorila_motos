@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -200,13 +202,18 @@ public class RegistroService {
 		dto.setKilometraje(registro.getKilometraje());
 
 		if (registro.getFactura() != null) {
-			// MAPEAR ID DE FACTURA
-			dto.setIdFactura(registro.getFactura().getIdFactura());
-
-			if (registro.getFactura().getCostoTotal() != null) {
+			Long idFactura = registro.getFactura().getIdFactura();
+			dto.setIdFactura(idFactura);
+			List<DetalleFacturaDTO> detalles = facturaService.obtenerDetallesPorFactura(idFactura);
+			dto.setDetalles(detalles);
+			BigDecimal totalReal = detalles.stream()
+					.map(d -> d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO)
+					.reduce(BigDecimal.ZERO, BigDecimal::add);
+			if (!detalles.isEmpty()) {
+				dto.setCostoTotal(totalReal.setScale(2, RoundingMode.HALF_UP).doubleValue());
+			} else if (registro.getFactura().getCostoTotal() != null) {
 				dto.setCostoTotal(registro.getFactura().getCostoTotal().doubleValue());
 			}
-			dto.setDetalles(facturaService.obtenerDetallesPorFactura(registro.getFactura().getIdFactura()));
 		}
 
 		return dto;
