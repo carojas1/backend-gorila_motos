@@ -1,6 +1,7 @@
 package com.projectBackend.GMotors.dto;
 
 import java.util.List;
+import java.time.LocalDate;
 
 public class RegistroCreateDTO {
 
@@ -14,6 +15,8 @@ public class RegistroCreateDTO {
     private Integer estado;
     private String observaciones;
     private Integer kilometraje;
+    private LocalDate fecha;
+    private LocalDate fechaEntregaEstimada;
 
     // --- FACTURA ---
     private List<DetalleFacturaCreateDTO> detalles;
@@ -70,6 +73,12 @@ public class RegistroCreateDTO {
 
     public Integer getKilometraje() { return kilometraje; }
     public void setKilometraje(Integer kilometraje) { this.kilometraje = kilometraje; }
+
+    public LocalDate getFecha() { return fecha; }
+    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+
+    public LocalDate getFechaEntregaEstimada() { return fechaEntregaEstimada; }
+    public void setFechaEntregaEstimada(LocalDate fechaEntregaEstimada) { this.fechaEntregaEstimada = fechaEntregaEstimada; }
 
     public List<DetalleFacturaCreateDTO> getDetalles() {
         return detalles;

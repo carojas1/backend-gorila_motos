@@ -14,13 +14,17 @@ import com.projectBackend.GMotors.repository.MotoRepository;
 import com.projectBackend.GMotors.repository.RegistroRepository;
 import com.projectBackend.GMotors.repository.TipoRepository;
 import com.projectBackend.GMotors.repository.UsuarioRepository;
+import com.projectBackend.GMotors.repository.DetalleFacturaRepository;
+import com.projectBackend.GMotors.model.DetalleFactura;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,14 +37,17 @@ public class RegistroService {
 	private final MotoRepository motoRepository;
 	private final TipoRepository tipoRepository;
 	private final FacturaService facturaService;
+	private final DetalleFacturaRepository detalleFacturaRepository;
 
 	public RegistroService(RegistroRepository registroRepository, UsuarioRepository usuarioRepository,
-			MotoRepository motoRepository, TipoRepository tipoRepository, FacturaService facturaService) {
+			MotoRepository motoRepository, TipoRepository tipoRepository, FacturaService facturaService,
+			DetalleFacturaRepository detalleFacturaRepository) {
 		this.registroRepository = registroRepository;
 		this.usuarioRepository = usuarioRepository;
 		this.motoRepository = motoRepository;
 		this.tipoRepository = tipoRepository;
 		this.facturaService = facturaService;
+		this.detalleFacturaRepository = detalleFacturaRepository;
 	}
 
 	@Transactional
@@ -49,6 +56,12 @@ public class RegistroService {
 		// 1️⃣ Validaciones de alto nivel
 		if (dto.getDetalles() == null || dto.getDetalles().isEmpty()) {
 			throw new IllegalArgumentException("[BE:REG-SVC]: El registro debe contener al menos un detalle");
+		}
+		if (dto.getKilometraje() != null && dto.getKilometraje() < 0) {
+			throw new IllegalArgumentException("El kilometraje no puede ser negativo");
+		}
+		if (dto.getEstado() == null || dto.getEstado() < 0 || dto.getEstado() > 4) {
+			throw new IllegalArgumentException("El estado del registro debe estar entre 0 y 4");
 		}
 
 		// 2️⃣ Obtener entidades base
@@ -70,10 +83,23 @@ public class RegistroService {
 		
 		// 4️⃣ Crear factura (delegado) con detalles incluyendo el tipo
 		Factura factura = facturaService.crearFactura(detallesConTipo, cliente.getId_usuario());
+		factura.setClienteNombre(cliente.getNombre_completo());
+		factura.setClienteCedula(cliente.getCedula());
+		factura.setClienteTelefono(cliente.getTelefono());
+		factura.setClienteCorreo(cliente.getCorreo());
+		factura.setClienteDireccion(cliente.getDireccion());
+		factura.setClienteTipo("CLIENTE_TALLER");
+		factura.setOrigenVenta("TALLER");
+		factura = facturaService.save(factura);
 
 		// 5️⃣ Crear registro
 		Registro registro = new Registro();
-		registro.setFecha(java.time.LocalDate.now());
+		LocalDate fechaServicio = dto.getFecha() != null ? dto.getFecha() : LocalDate.now();
+		if (dto.getFechaEntregaEstimada() != null && dto.getFechaEntregaEstimada().isBefore(fechaServicio)) {
+			throw new IllegalArgumentException("La entrega estimada no puede ser anterior a la fecha del servicio");
+		}
+		registro.setFecha(fechaServicio);
+		registro.setFechaEntregaEstimada(dto.getFechaEntregaEstimada());
 		registro.setObservaciones(dto.getObservaciones());
 		registro.setEstado(dto.getEstado());
 		registro.setKilometraje(dto.getKilometraje());
@@ -83,6 +109,13 @@ public class RegistroService {
 		registro.setEncargado(encargado);
 		registro.setMoto(moto);
 		registro.setTipo(tipo);
+		aplicarFechasEstado(registro, dto.getEstado(), fechaServicio);
+
+		if (dto.getKilometraje() != null
+				&& (moto.getKilometraje() == null || dto.getKilometraje() > moto.getKilometraje())) {
+			moto.setKilometraje(dto.getKilometraje());
+			motoRepository.save(moto);
+		}
 
 		// 6️⃣ Persistir registro
 		return registroRepository.save(registro);
@@ -96,19 +129,30 @@ public class RegistroService {
 	 * @return Registro actualizado
 	 */
 	@Transactional
-	public Registro actualizarEstado(Long idRegistro, Integer nuevoEstado, String observaciones) {
+	public Registro actualizarEstado(Long idRegistro, Integer nuevoEstado, String observaciones,
+			LocalDate fechaEntregaEstimada) {
 
 		// Validar que el estado no sea nulo
 		if (nuevoEstado == null) {
 			throw new IllegalArgumentException("[BE:REG-SVC]: El estado no puede ser nulo");
+		}
+		if (nuevoEstado < 0 || nuevoEstado > 4) {
+			throw new IllegalArgumentException("El estado del registro debe estar entre 0 y 4");
 		}
 
 		// Buscar el registro
 		Registro registro = registroRepository.findById(idRegistro)
 				.orElseThrow(() -> new RuntimeException("[BE:REG-SVC]: Registro no encontrado con ID: " + idRegistro));
 
-		// Actualizar solo el estado
+		if (fechaEntregaEstimada != null) {
+			if (registro.getFecha() != null && fechaEntregaEstimada.isBefore(registro.getFecha())) {
+				throw new IllegalArgumentException("La entrega estimada no puede ser anterior a la fecha del servicio");
+			}
+			registro.setFechaEntregaEstimada(fechaEntregaEstimada);
+		}
+
 		registro.setEstado(nuevoEstado);
+		aplicarFechasEstado(registro, nuevoEstado, LocalDate.now());
         
 		 // Actualizar observaciones si vienen
 	    if (observaciones != null) {
@@ -119,16 +163,34 @@ public class RegistroService {
 		return registroRepository.save(registro);
 	}
 
+	private void aplicarFechasEstado(Registro registro, Integer estado, LocalDate fechaCambio) {
+		if (estado == null) return;
+		if (estado >= 2 && registro.getFechaCompletado() == null) {
+			registro.setFechaCompletado(fechaCambio);
+		}
+		if (estado >= 3 && registro.getFechaEntregado() == null) {
+			registro.setFechaEntregado(fechaCambio);
+		}
+		if (estado >= 4 && registro.getFechaFacturado() == null) {
+			registro.setFechaFacturado(fechaCambio);
+		}
+	}
+
 	// ================= LISTAR TODOS =================
 	@Transactional(readOnly = true)
 	public List<RegistroListadoDTO> listarTodos() {
-		return registroRepository.findAll().stream().map(this::mapToDTO).toList();
+		return mapToDTOs(registroRepository.findAll(), true);
+	}
+
+	@Transactional(readOnly = true)
+	public List<RegistroListadoDTO> listarResumen() {
+		return mapToDTOs(registroRepository.findAll(), false);
 	}
 
 	// ================= LISTAR POR CLIENTE =================
 	@Transactional(readOnly = true)
 	public List<RegistroListadoDTO> listarPorCliente(Long idCliente) {
-		return registroRepository.findByCliente_IdUsuario(idCliente).stream().map(this::mapToDTO).toList();
+		return mapToDTOs(registroRepository.findByCliente_IdUsuario(idCliente), true);
 	}
 
 	// ================= HISTORIAL DE MANTENIMIENTOS POR CLIENTE =================
@@ -138,8 +200,7 @@ public class RegistroService {
 		usuarioRepository.findById(idCliente)
 				.orElseThrow(() -> new RuntimeException("[BE:REG-SVC]: Cliente no encontrado"));
 
-		return registroRepository.findByCliente_IdUsuarioOrderByFechaDesc(idCliente).stream().map(this::mapToDTO)
-				.toList();
+		return mapToDTOs(registroRepository.findByCliente_IdUsuarioOrderByFechaDesc(idCliente), true);
 	}
 
 	// ================= BUSCAR POR NOMBRE DE CLIENTE =================
@@ -149,7 +210,7 @@ public class RegistroService {
 			throw new IllegalArgumentException("[BE:REG-SVC]: El nombre del cliente no puede estar vacío");
 		}
 
-		return registroRepository.buscarPorNombreCliente(nombreCliente).stream().map(this::mapToDTO).toList();
+		return mapToDTOs(registroRepository.buscarPorNombreCliente(nombreCliente), true);
 	}
 
 	// ================= BUSCAR POR PLACA DE MOTO =================
@@ -158,32 +219,58 @@ public class RegistroService {
 	    if (placa == null || placa.isBlank()) {
 	        throw new IllegalArgumentException("[BE:REG-SVC]: La placa no puede estar vacía");
 	    }
-	    return registroRepository.findByMoto_PlacaContainingIgnoreCase(placa)
-	            .stream()
-	            .map(this::mapToDTO)  
-	            .collect(Collectors.toList());
+	    return mapToDTOs(registroRepository.findByMoto_PlacaContainingIgnoreCase(placa), true);
 	}
 
 	// ================= LISTAR POR ENCARGADO =================
 	@Transactional(readOnly = true)
 	public List<RegistroListadoDTO> listarPorEncargado(Long idEncargado) {
-		return registroRepository.findByEncargado_IdUsuario(idEncargado).stream().map(this::mapToDTO).toList();
+		return mapToDTOs(registroRepository.findByEncargado_IdUsuario(idEncargado), true);
 	}
 
 	// ================= MAPEO A DTO =================
-	private RegistroListadoDTO mapToDTO(Registro registro) {
+	private List<RegistroListadoDTO> mapToDTOs(List<Registro> registros, boolean incluirDetalles) {
+		if (registros.isEmpty()) return Collections.emptyList();
+
+		Map<Long, List<DetalleFactura>> detallesPorFactura = new HashMap<>();
+		if (incluirDetalles) {
+			List<Long> idsFactura = registros.stream()
+					.filter(r -> r.getFactura() != null)
+					.map(r -> r.getFactura().getIdFactura())
+					.distinct()
+					.toList();
+			for (DetalleFactura detalle : detalleFacturaRepository.findByIdFacturaIn(idsFactura)) {
+				detallesPorFactura.computeIfAbsent(detalle.getIdFactura(), ignored -> new ArrayList<>()).add(detalle);
+			}
+		}
+
+		return registros.stream()
+				.map(registro -> mapToDTO(registro, detallesPorFactura, incluirDetalles))
+				.toList();
+	}
+
+	private RegistroListadoDTO mapToDTO(Registro registro, Map<Long, List<DetalleFactura>> detallesPorFactura,
+			boolean incluirDetalles) {
 
 		RegistroListadoDTO dto = new RegistroListadoDTO();
 
 		dto.setIdRegistro(registro.getIdRegistro());
 		dto.setIdMoto(registro.getMoto().getIdMoto());
 		dto.setFecha(registro.getFecha());
+		dto.setFechaEntregaEstimada(registro.getFechaEntregaEstimada());
+		dto.setFechaCompletado(registro.getFechaCompletado());
+		dto.setFechaEntregado(registro.getFechaEntregado());
+		dto.setFechaFacturado(registro.getFechaFacturado());
 		dto.setDescripcion(registro.getObservaciones());
 		dto.setObservaciones(registro.getObservaciones());
 		dto.setEstado(registro.getEstado());
 
 		dto.setIdCliente(registro.getCliente().getId_usuario());
 		dto.setNombreCliente(registro.getCliente().getNombre_completo());
+		dto.setCedulaCliente(registro.getCliente().getCedula());
+		dto.setTelefonoCliente(registro.getCliente().getTelefono());
+		dto.setCorreoCliente(registro.getCliente().getCorreo());
+		dto.setDireccionCliente(registro.getCliente().getDireccion());
 
 		if (registro.getEncargado() != null) {
 			dto.setIdEncargado(registro.getEncargado().getId_usuario());
@@ -204,8 +291,10 @@ public class RegistroService {
 		if (registro.getFactura() != null) {
 			Long idFactura = registro.getFactura().getIdFactura();
 			dto.setIdFactura(idFactura);
-			List<DetalleFacturaDTO> detalles = facturaService.obtenerDetallesPorFactura(idFactura);
-			dto.setDetalles(detalles);
+			List<DetalleFacturaDTO> detalles = incluirDetalles
+					? DetalleFacturaDTO.mapToDTOList(detallesPorFactura.getOrDefault(idFactura, Collections.emptyList()))
+					: Collections.emptyList();
+			if (incluirDetalles) dto.setDetalles(detalles);
 			BigDecimal totalReal = detalles.stream()
 					.map(d -> d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO)
 					.reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -224,7 +313,12 @@ public class RegistroService {
 		Registro registro = registroRepository.findById(idRegistro)
 				.orElseThrow(() -> new RuntimeException("Registro no encontrado"));
 
-		return mapToDTO(registro);
+		Map<Long, List<DetalleFactura>> detallesPorFactura = new HashMap<>();
+		if (registro.getFactura() != null) {
+			detallesPorFactura.put(registro.getFactura().getIdFactura(),
+					detalleFacturaRepository.findByIdFactura(registro.getFactura().getIdFactura()));
+		}
+		return mapToDTO(registro, detallesPorFactura, true);
 	}
 
 }

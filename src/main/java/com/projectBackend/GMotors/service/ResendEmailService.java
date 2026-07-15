@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.projectBackend.GMotors.model.DetalleFactura;
+import com.projectBackend.GMotors.model.Registro;
 import com.projectBackend.GMotors.model.Usuario;
 import jakarta.mail.internet.MimeMessage;
 import java.math.BigDecimal;
@@ -186,9 +187,27 @@ public class ResendEmailService {
                                   double costoTotal, String fecha,
                                   Long idRegistro, List<DetalleFactura> detalles,
                                   Usuario cliente) {
-        String html = htmlServicio(nombreCliente, placa, tipoServicio, costoTotal, fecha, idRegistro, detalles, cliente);
+        String html = htmlServicio(nombreCliente, placa, tipoServicio, costoTotal, fecha, idRegistro, detalles, cliente, null);
         String refAsunto = idRegistro != null ? String.format("ORD-%06d", idRegistro) : "";
         return enviar(correoCliente, "Comprobante de servicio " + refAsunto + " — Gorila Motos", html);
+    }
+
+    public boolean enviarFactura(Registro registro, List<DetalleFactura> detalles) {
+        if (registro == null || registro.getCliente() == null) return false;
+        Usuario cliente = registro.getCliente();
+        String correo = cliente.getCorreo();
+        if (correo == null || correo.isBlank() || correo.endsWith("@gmotors.local")) return false;
+
+        String placa = registro.getMoto() != null ? registro.getMoto().getPlaca() : "No registrada";
+        String tipo = registro.getTipo() != null ? registro.getTipo().getNombre() : "Servicio de taller";
+        double total = registro.getFactura() != null && registro.getFactura().getCostoTotal() != null
+                ? registro.getFactura().getCostoTotal().doubleValue() : 0.0;
+        String fecha = registro.getFecha() != null ? registro.getFecha().toString() : "No registrada";
+        String html = htmlServicio(cliente.getNombre_completo(), placa, tipo, total, fecha,
+                registro.getIdRegistro(), detalles, cliente, registro);
+        String refAsunto = registro.getIdRegistro() != null
+                ? String.format("ORD-%06d", registro.getIdRegistro()) : "";
+        return enviar(correo, "Comprobante de servicio " + refAsunto + " — Gorila Motos", html);
     }
 
     /* ══════════════════════════════════════════════
@@ -809,7 +828,7 @@ public class ResendEmailService {
 
     private String htmlServicio(String nombre, String placa, String tipoServicio,
                                 double costoTotal, String fecha, Long idRegistro,
-                                List<DetalleFactura> detalles, Usuario cliente) {
+                                List<DetalleFactura> detalles, Usuario cliente, Registro registro) {
         BigDecimal totalDetalles = detalles == null ? BigDecimal.ZERO : detalles.stream()
                 .map(d -> d.getSubtotal() != null ? d.getSubtotal() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -843,6 +862,30 @@ public class ResendEmailService {
                 datoClienteFila("Correo", correo) +
                 datoClienteFila("Dirección", direccion) +
                 "</table></td></tr>";
+
+        String datosServicioHtml = "";
+        if (registro != null) {
+            String moto = registro.getMoto() != null
+                    ? primerDato(registro.getMoto().getMarca()) + " " + primerDato(registro.getMoto().getModelo())
+                    : "No registrada";
+            String kilometraje = registro.getKilometraje() != null
+                    ? String.format("%,d km", registro.getKilometraje()) : "No registrado";
+            String entrega = registro.getFechaEntregaEstimada() != null
+                    ? registro.getFechaEntregaEstimada().toString() : "No registrada";
+            String mecanico = registro.getEncargado() != null
+                    ? registro.getEncargado().getNombre_completo() : "No asignado";
+            String observaciones = primerDato(registro.getObservaciones());
+            datosServicioHtml =
+                    "<tr><td style='padding:0 36px 24px'>" +
+                    "<p style='margin:0 0 10px;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#64748B'>Datos del servicio</p>" +
+                    "<table width='100%' cellpadding='0' cellspacing='0' style='background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px'>" +
+                    datoClienteFila("Motocicleta", moto.trim()) +
+                    datoClienteFila("Kilometraje", kilometraje) +
+                    datoClienteFila("Entrega estimada", entrega) +
+                    datoClienteFila("Tecnico responsable", mecanico) +
+                    datoClienteFila("Fallas / observaciones", observaciones) +
+                    "</table></td></tr>";
+        }
 
         StringBuilder filasHtml = new StringBuilder();
         if (detalles != null && !detalles.isEmpty()) {
@@ -943,6 +986,7 @@ public class ResendEmailService {
                "<td colspan='2' style='padding:16px'><p style='margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748B'>Servicio Realizado</p><p style='margin:0;font-size:15px;font-weight:600;color:#0F172A'>" + tipoServicio + "</p></td>" +
                "</tr></table></td></tr>" +
                datosClienteHtml +
+               datosServicioHtml +
                /* Tabla de items */
                (tieneDetalles ? ("<tr><td style='padding:0 36px 24px'><table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden'>" + filasHtml.toString() + "</table></td></tr>") : "") +
                /* Total */

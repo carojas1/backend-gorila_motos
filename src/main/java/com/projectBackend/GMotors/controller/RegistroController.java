@@ -6,7 +6,6 @@ import com.projectBackend.GMotors.dto.DetalleFacturaDTO;
 import com.projectBackend.GMotors.dto.DetalleFacturaCreateDTO;
 import com.projectBackend.GMotors.model.DetalleFactura;
 import com.projectBackend.GMotors.model.Registro;
-import com.projectBackend.GMotors.model.Usuario;
 import com.projectBackend.GMotors.repository.DetalleFacturaRepository;
 import com.projectBackend.GMotors.repository.RegistroRepository;
 import com.projectBackend.GMotors.model.Factura;
@@ -19,6 +18,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.time.LocalDate;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.http.HttpStatus;
@@ -87,8 +87,6 @@ public class RegistroController {
 			@RequestBody List<DetalleFacturaCreateDTO> detallesDTO) {
 		System.out.println("[RegistroController] PUT /api/registros/" + idRegistro + "/factura");
 		System.out.println(" Detalles recibidos: " + detallesDTO);
-		Long idFactura;
-
 		Registro registro = registroRepository.findById(idRegistro)
 				.orElseThrow(() -> new RuntimeException("[BE:REG-SVC]: Registro no encontrado con ID: " + idRegistro));		
 		// Validar que el estado no sea nulo
@@ -100,23 +98,6 @@ public class RegistroController {
 
 		try {
 			Factura factura = facturaService.actualizarFactura(idfactura, detallesDTO);
-
-			// ── Enviar la factura por correo al cliente (best-effort, NO rompe la respuesta) ──
-			try {
-				Usuario cliente = registro.getCliente();
-				String correo = cliente != null ? cliente.getCorreo() : null;
-				if (correo != null && !correo.isBlank() && !correo.endsWith("@gmotors.local")) {
-					String placa    = registro.getMoto()  != null ? registro.getMoto().getPlaca()   : "—";
-					String tipoServ = registro.getTipo()  != null ? registro.getTipo().getNombre()  : "Servicio de taller";
-					double total    = factura.getCostoTotal() != null ? factura.getCostoTotal().doubleValue() : 0.0;
-					String fecha    = registro.getFecha() != null ? registro.getFecha().toString() : "";
-					List<DetalleFactura> dets = detalleFacturaRepository.findByIdFactura(factura.getIdFactura());
-					emailService.enviarFactura(correo, cliente.getNombre_completo(), placa, tipoServ, total, fecha, idRegistro, dets, cliente);
-					System.out.println("[RegistroController] Factura enviada por correo a " + correo);
-				}
-			} catch (Exception mailEx) {
-				System.err.println("[RegistroController] No se pudo enviar la factura por correo: " + mailEx.getMessage());
-			}
 
 			Map<String, Object> response = new HashMap<>();
 			response.put("success", true);
@@ -149,30 +130,26 @@ public class RegistroController {
 	public ResponseEntity<?> actualizarEstado(@PathVariable Long id, @RequestBody Map<String, Object> body) {
 		Integer estado = body.containsKey("estado") ? ((Number) body.get("estado")).intValue() : null;
 		String observaciones = body.containsKey("observaciones") ? (String) body.get("observaciones") : null;
-
 		try {
-			Registro registroActualizado = registroService.actualizarEstado(id, estado, observaciones);
+		Object fechaEntregaRaw = body.containsKey("fechaEntregaEstimada")
+				? body.get("fechaEntregaEstimada")
+				: body.get("fecha_entrega_estimada");
+		LocalDate fechaEntregaEstimada = fechaEntregaRaw != null && !fechaEntregaRaw.toString().isBlank()
+				? LocalDate.parse(fechaEntregaRaw.toString())
+				: null;
+
+			Registro registroActualizado = registroService.actualizarEstado(id, estado, observaciones,
+					fechaEntregaEstimada);
 
 			// ── Email automático cuando se factura (estado = 4) ──────────────────
 			if (estado != null && estado == 4) {
 				try {
 					Registro reg = registroRepository.findById(id).orElse(null);
 					if (reg != null && reg.getCliente() != null && reg.getCliente().getCorreo() != null) {
-						Usuario cliente = reg.getCliente();
-						double  costo   = reg.getFactura() != null && reg.getFactura().getCostoTotal() != null
-						                  ? reg.getFactura().getCostoTotal().doubleValue() : 0.0;
-						String  tipo    = reg.getTipo() != null ? reg.getTipo().getNombre() : "Servicio de mantenimiento";
-						String  fecha   = reg.getFecha() != null ? reg.getFecha().toString() : "—";
-						String  placa   = reg.getMoto() != null ? reg.getMoto().getPlaca() : "—";
-
 						List<DetalleFactura> dets2 = reg.getFactura() != null
 							? detalleFacturaRepository.findByIdFactura(reg.getFactura().getIdFactura())
 							: java.util.Collections.emptyList();
-						emailService.enviarFactura(
-							cliente.getCorreo(),
-							cliente.getNombre_completo(),
-							placa, tipo, costo, fecha, id, dets2, cliente
-						);
+						emailService.enviarFactura(reg, dets2);
 					}
 				} catch (Exception emailEx) {
 					System.err.println("[EMAIL] Error enviando factura: " + emailEx.getMessage());
@@ -251,6 +228,11 @@ public class RegistroController {
 	@GetMapping
 	public ResponseEntity<List<RegistroListadoDTO>> listarTodos() {
 		return ResponseEntity.ok(registroService.listarTodos());
+	}
+
+	@GetMapping("/resumen")
+	public ResponseEntity<List<RegistroListadoDTO>> listarResumen() {
+		return ResponseEntity.ok(registroService.listarResumen());
 	}
 
 	// ================= LISTAR POR CLIENTE =================

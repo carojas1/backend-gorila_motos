@@ -24,6 +24,18 @@ public class Registro {
     @Column(nullable = true)
     private Integer kilometraje;
 
+    @Column(name = "fecha_entrega_estimada")
+    private LocalDate fechaEntregaEstimada;
+
+    @Column(name = "fecha_completado")
+    private LocalDate fechaCompletado;
+
+    @Column(name = "fecha_entregado")
+    private LocalDate fechaEntregado;
+
+    @Column(name = "fecha_facturado")
+    private LocalDate fechaFacturado;
+
     // ================== RELACIONES ==================
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -82,6 +94,18 @@ public class Registro {
 
     public Integer getKilometraje() { return kilometraje; }
     public void setKilometraje(Integer kilometraje) { this.kilometraje = kilometraje; }
+
+    public LocalDate getFechaEntregaEstimada() { return fechaEntregaEstimada; }
+    public void setFechaEntregaEstimada(LocalDate fechaEntregaEstimada) { this.fechaEntregaEstimada = fechaEntregaEstimada; }
+
+    public LocalDate getFechaCompletado() { return fechaCompletado; }
+    public void setFechaCompletado(LocalDate fechaCompletado) { this.fechaCompletado = fechaCompletado; }
+
+    public LocalDate getFechaEntregado() { return fechaEntregado; }
+    public void setFechaEntregado(LocalDate fechaEntregado) { this.fechaEntregado = fechaEntregado; }
+
+    public LocalDate getFechaFacturado() { return fechaFacturado; }
+    public void setFechaFacturado(LocalDate fechaFacturado) { this.fechaFacturado = fechaFacturado; }
 
     public Factura getFactura() {
         return factura;

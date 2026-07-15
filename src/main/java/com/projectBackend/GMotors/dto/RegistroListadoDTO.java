@@ -16,6 +16,10 @@ public class RegistroListadoDTO {
     // ================== CLIENTE ==================
     private Long idCliente;
     private String nombreCliente;
+    private String cedulaCliente;
+    private String telefonoCliente;
+    private String correoCliente;
+    private String direccionCliente;
 
     // ================== ENCARGADO ==================
     private Long idEncargado;
@@ -33,6 +37,10 @@ public class RegistroListadoDTO {
     private String observaciones;
     private String tipoMantenimiento;
     private Integer kilometraje;
+    private LocalDate fechaEntregaEstimada;
+    private LocalDate fechaCompletado;
+    private LocalDate fechaEntregado;
+    private LocalDate fechaFacturado;
 
     // ================== COSTO ==================
     private Double costoTotal;
@@ -57,6 +65,18 @@ public class RegistroListadoDTO {
 
     public Long getId_cliente() { return idCliente; }
     public void setIdCliente(Long idCliente) { this.idCliente = idCliente; }
+
+    public String getCliente_cedula() { return cedulaCliente; }
+    public void setCedulaCliente(String cedulaCliente) { this.cedulaCliente = cedulaCliente; }
+
+    public String getCliente_telefono() { return telefonoCliente; }
+    public void setTelefonoCliente(String telefonoCliente) { this.telefonoCliente = telefonoCliente; }
+
+    public String getCliente_correo() { return correoCliente; }
+    public void setCorreoCliente(String correoCliente) { this.correoCliente = correoCliente; }
+
+    public String getCliente_direccion() { return direccionCliente; }
+    public void setDireccionCliente(String direccionCliente) { this.direccionCliente = direccionCliente; }
 
     public Long getId_encargado() { return idEncargado; }
     public void setIdEncargado(Long idEncargado) { this.idEncargado = idEncargado; }
@@ -91,6 +111,18 @@ public class RegistroListadoDTO {
 
     public Integer getKilometraje() { return kilometraje; }
     public void setKilometraje(Integer kilometraje) { this.kilometraje = kilometraje; }
+
+    public LocalDate getFecha_entrega_estimada() { return fechaEntregaEstimada; }
+    public void setFechaEntregaEstimada(LocalDate fechaEntregaEstimada) { this.fechaEntregaEstimada = fechaEntregaEstimada; }
+
+    public LocalDate getFecha_completado() { return fechaCompletado; }
+    public void setFechaCompletado(LocalDate fechaCompletado) { this.fechaCompletado = fechaCompletado; }
+
+    public LocalDate getFecha_entregado() { return fechaEntregado; }
+    public void setFechaEntregado(LocalDate fechaEntregado) { this.fechaEntregado = fechaEntregado; }
+
+    public LocalDate getFecha_facturado() { return fechaFacturado; }
+    public void setFechaFacturado(LocalDate fechaFacturado) { this.fechaFacturado = fechaFacturado; }
 
     public Double getCosto_total() { return costoTotal; }
     public void setCostoTotal(Double costoTotal) { this.costoTotal = costoTotal; }
